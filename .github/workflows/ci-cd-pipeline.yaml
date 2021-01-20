@@ -1,0 +1,144 @@
+name: Full CI/CD pipeline
+
+on:
+  pull_request:
+    branches: [ master ]
+
+env:
+  APPLICATION_NAME: study-resources
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+        matrix:
+          node-version: [14.x]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up GCloud
+      uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+      with:
+        version: '274.0.1'
+        service_account_email: ${{ secrets.GCP_SERVICE_ACCT_EMAIL }}
+        service_account_key: ${{ secrets.GCP_SERVICE_ACCT_KEY }}
+        export_default_credentials: true
+    - run: |
+        gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
+        gcloud config set run/region ${{ secrets.GCP_REGION }}
+    - name: echo gcp cradentilas
+      run:  echo this is  ${GOOGLE_APPLICATION_CREDENTIALS}  
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - run: npm install
+    - run: npm run build --if-present
+    - run: npm test
+      env:
+        CI: true
+        BUCKET_NAME: study-resources-pdf
+        KEY_FILE_PATH: ./src/config/key.json
+        PROJECT_ID: study-resources-app
+        POSTGRES_HOST: hattie.db.elephantsql.com
+        POSTGRES_PORT: 5432
+        POSTGRES_USER: govfwqej
+        POSTGRES_PASSWORD: ${{secrets.TEST_DB_PASSWORD}}
+        POSTGRES_DB: govfwqej
+        REFRESH_TOKEN_SECRET: ${{secrets.REFRESH_TOKEN_SECRET}}
+        ACCESS_TOKEN_SECRET: ${{secrets.ACCESS_TOKEN_SECRET}}
+
+        
+  build_image:
+    needs: [test]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up GCloud
+      uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+      with:
+        version: '274.0.1'
+        service_account_email: ${{ secrets.GCP_SERVICE_ACCT_EMAIL }}
+        service_account_key: ${{ secrets.GCP_SERVICE_ACCT_KEY }}
+    - run: |
+        gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
+        gcloud config set run/region ${{ secrets.GCP_REGION }}
+        gcloud auth configure-docker
+        gcloud info
+    - name: Build and tag image
+      run: docker build -t "gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ env.APPLICATION_NAME }}:latest" .
+    - name: Push to GCP image registry
+      run: docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ env.APPLICATION_NAME }}:latest
+      env:
+        CI: true
+        BUCKET_NAME: study-resources-pdf
+        KEY_FILE_PATH: ./src/config/key.json
+        PROJECT_ID: study-resources-app
+        POSTGRES_HOST: hattie.db.elephantsql.com
+        POSTGRES_PORT: 5432
+        POSTGRES_USER: govfwqej
+        POSTGRES_PASSWORD: ${{secrets.TEST_DB_PASSWORD}}
+        POSTGRES_DB: govfwqej
+        REFRESH_TOKEN_SECRET: ${{secrets.REFRESH_TOKEN_SECRET}}
+        ACCESS_TOKEN_SECRET: ${{secrets.ACCESS_TOKEN_SECRET}}
+      
+  # test_image:
+  #   needs: [build_image]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - name: Set up GCloud
+  #     uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+  #     with:
+  #       version: '274.0.1'
+  #       service_account_email: ${{ secrets.GCP_SERVICE_ACCT_EMAIL }}
+  #       service_account_key: ${{ secrets.GCP_SERVICE_ACCT_KEY }}
+  #   - run: |
+  #       gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
+  #       gcloud config set run/region ${{ secrets.GCP_REGION }}
+  #       gcloud auth configure-docker
+  #       gcloud info
+  #     env: 
+  #       POSTGRES_PASSWORD: ${{secrets.TEST_DB_PASSWORD}}
+      
+  #   - name: Run unit tests in container
+  #     run: docker run "gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ env.APPLICATION_NAME }}:latest"  test
+      
+   
+  deploy:
+    needs: [build_image]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up GCloud
+      uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+      with:
+        version: '274.0.1'
+        service_account_email: ${{ secrets.GCP_SERVICE_ACCT_EMAIL }}
+        service_account_key: ${{ secrets.GCP_SERVICE_ACCT_KEY }}
+    - run: |
+        gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
+        gcloud config set run/region ${{ secrets.GCP_REGION }}
+        gcloud info
+        
+    - name: Deploy to Cloud Run
+      run: gcloud run deploy ${{ env.APPLICATION_NAME }} --image=gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ env.APPLICATION_NAME }}:latest --platform=managed --allow-unauthenticated
+
+  merge_branch:
+    needs: [deploy]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Merge staging -> uat
+        uses: devmasx/merge-branch@v1.3.1
+        with:
+          type: now
+          target_branch: master
+          github_token: ${{ github.token }}
+  delete-branch:
+    needs: [merge_branch]
+    runs-on: ubuntu-latest
+    steps:
+      - name: delete branch
+        uses: SvanBoxel/delete-merged-branch@main
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
