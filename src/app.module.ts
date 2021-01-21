@@ -5,6 +5,8 @@ import configuration from './config/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Pdf } from './pdf/pdf.entity';
 import { AuthenticationModule } from './authentication/authentication.module';
+import { TopicsController } from './topics/topics.controller';
+import { TopicsModule } from './topics/topics.module';
 
 @Module({
   imports: [
@@ -23,8 +25,9 @@ import { AuthenticationModule } from './authentication/authentication.module';
     }),
     PdfModule,
     AuthenticationModule,
+    TopicsModule,
   ],
-  controllers: [],
+  controllers: [TopicsController],
   providers: [],
 })
 export class AppModule {}
