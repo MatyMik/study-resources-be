@@ -3,21 +3,24 @@ import {
   Column,
   PrimaryGeneratedColumn,
   BaseEntity,
-  OneToMany,
+  ManyToOne,
 } from 'typeorm';
 import { Topic } from '../topics/topic.entity';
 
 @Entity()
-export class User extends BaseEntity {
+export class Youtube extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column({ nullable: false })
-  email: string;
+  title: string;
 
   @Column({ nullable: false })
-  password: string;
+  url: string;
 
-  @OneToMany(() => Topic, (topic) => topic.user)
-  topic: Topic[];
+  @ManyToOne(() => Topic, (topic) => topic.youtube, { onDelete: 'CASCADE' })
+  topic: Topic;
+
+  @Column({ type: 'bigint', default: Date.now() })
+  lastActive: number;
 }

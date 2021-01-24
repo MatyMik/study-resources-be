@@ -6,13 +6,18 @@ import { ValidationPipe } from '@nestjs/common';
 import { RequestValidationError } from '../errors/request-validation-error';
 import { HttpExceptionFilter } from '../middlewares/error-filter';
 import { AuthenticationController } from '../authentication/authentication.controller';
-import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from '../authentication/user.entity';
 import { AuthenticationService } from '../authentication/authentication.service';
 import * as cookieParser from 'cookie-parser';
 import { AuthGuard } from '../middlewares/tokens';
+import { Topic } from '../topics/topic.entity';
+import { TypeOrmModule, getRepositoryToken } from '@nestjs/typeorm';
+import { ConfigModule } from '@nestjs/config';
+import configuration from '../config/config';
+import { Youtube } from '../youtube/youtube.entity';
+import { Article } from '../article/article.entity';
+import { Pdf } from '../pdf/pdf.entity';
 
-// const fileName = 'FileName';
 const password = '21Passrd';
 const email = 'test@test.com';
 const wrongPasword = '21Paw1ord';
@@ -22,13 +27,30 @@ describe('AppController (e2e)', () => {
   let controller;
   let repo;
   let service;
+  let module: TestingModule;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
+    module = await Test.createTestingModule({
+      imports: [
+        AppModule,
+        // ConfigModule.forRoot({ load: [configuration] }),
+        // TypeOrmModule.forRoot({
+        //   type: 'postgres',
+        //   host: process.env.POSTGRES_HOST,
+        //   port: parseInt(process.env.POSTGRES_PORT),
+        //   username: process.env.POSTGRES_USER,
+        //   password: process.env.POSTGRES_PASSWORD,
+        //   database: process.env.POSTGRES_DB,
+        //   entities: [User, Topic, Youtube, Article, Pdf],
+        //   autoLoadEntities: true,
+        //   synchronize: true,
+        //   keepConnectionAlive: true,
+        // }),
+        // TypeOrmModule.forFeature([User, Topic]),
+      ],
     }).compile();
 
-    app = moduleFixture.createNestApplication();
+    app = module.createNestApplication();
     app.use(cookieParser());
     app.useGlobalGuards(new AuthGuard());
     app.useGlobalPipes(
@@ -38,17 +60,21 @@ describe('AppController (e2e)', () => {
     );
     app.useGlobalFilters(new HttpExceptionFilter());
     controller = app.get<AuthenticationController>(AuthenticationController);
-    repo = moduleFixture.get<User>(getRepositoryToken(User));
-    service = moduleFixture.get<AuthenticationService>(AuthenticationService);
+    repo = module.get<User>(getRepositoryToken(User));
+    service = module.get<AuthenticationService>(AuthenticationService);
     await app.init();
   });
 
   afterEach(async () => {
-    await repo.query('TRUNCATE TABLE public."user";');
+    await repo.query('TRUNCATE TABLE public."user" CASCADE;');
   });
 
   beforeEach(async () => {
-    await repo.query('TRUNCATE TABLE public."user";');
+    await repo.query('TRUNCATE TABLE public."user" CASCADE;');
+  });
+
+  afterAll(async () => {
+    module.close();
   });
 
   it('/auth/signup', async () => {

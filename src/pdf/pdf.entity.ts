@@ -1,4 +1,11 @@
-import { Entity, Column, PrimaryGeneratedColumn, BaseEntity } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  BaseEntity,
+  ManyToOne,
+} from 'typeorm';
+import { Topic } from '../topics/topic.entity';
 
 @Entity()
 export class Pdf extends BaseEntity {
@@ -16,4 +23,10 @@ export class Pdf extends BaseEntity {
 
   @Column({ nullable: false })
   url: string;
+
+  @ManyToOne(() => Topic, (topic) => topic.pdf, { onDelete: 'CASCADE' })
+  topic: Topic;
+
+  @Column({ type: 'bigint', default: Date.now() })
+  lastActive: number;
 }
