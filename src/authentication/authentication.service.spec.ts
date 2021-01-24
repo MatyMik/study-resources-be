@@ -1,10 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthenticationService } from './authentication.service';
 import { TypeOrmModule, getRepositoryToken } from '@nestjs/typeorm';
-import { User } from './user.entity';
+import { Article } from '../article/article.entity';
+import { Topic } from '../topics/topic.entity';
+import { User } from '../authentication/user.entity';
+import { Pdf } from '../pdf/pdf.entity';
+import { Youtube } from '../youtube/youtube.entity';
 import { ConfigModule } from '@nestjs/config';
 import configuration from '../config/config';
-import { LoginDto } from './dto/login-dto';
 
 const password = '21Password';
 const email = 'test@test.com';
@@ -30,7 +33,7 @@ describe('AuthenticationService', () => {
           username: process.env.POSTGRES_USER,
           password: process.env.POSTGRES_PASSWORD,
           database: process.env.POSTGRES_DB,
-          entities: [User],
+          entities: [Topic, User, Pdf, Youtube, Article],
           autoLoadEntities: true,
           synchronize: true,
           keepConnectionAlive: true,
@@ -48,11 +51,11 @@ describe('AuthenticationService', () => {
   });
 
   afterEach(async () => {
-    await repo.query('TRUNCATE TABLE public."user";');
+    await repo.query('TRUNCATE TABLE public."user" CASCADE;');
   });
 
   beforeEach(async () => {
-    await repo.query('TRUNCATE TABLE public."user";');
+    await repo.query('TRUNCATE TABLE public."user" CASCADE;');
   });
 
   it('should be defined', () => {
@@ -80,6 +83,15 @@ describe('AuthenticationService', () => {
 
       const foundUser = await service.findUserByEmail(email);
       expect(foundUser.email).toEqual(email);
+    });
+  });
+  describe('find user by id', () => {
+    it('should find a user by email', async () => {
+      await service.createUser(user);
+
+      const foundUser = await service.findUserByEmail(email);
+      const userById = await service.findById(foundUser.id);
+      expect(userById.email).toEqual(email);
     });
   });
   describe('validate password', () => {

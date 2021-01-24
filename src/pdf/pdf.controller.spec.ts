@@ -3,12 +3,19 @@ import { PdfService } from './pdf.service';
 import { PdfController } from './pdf.controller';
 import { ConfigModule } from '@nestjs/config';
 import configuration from '../config/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { TypeOrmModule, getRepositoryToken } from '@nestjs/typeorm';
 import { Pdf } from './pdf.entity';
+import { Topic } from '../topics/topic.entity';
+import { User } from '../authentication/user.entity';
+import { saveOnePdfToTopic } from '../tests/test-helpers';
+import { Article } from '../article/article.entity';
+import { Youtube } from '../youtube/youtube.entity';
 
 describe('PdfController', () => {
   let controller;
   let module: TestingModule;
+  let repo;
+  let service;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -22,20 +29,34 @@ describe('PdfController', () => {
           username: process.env.POSTGRES_USER,
           password: process.env.POSTGRES_PASSWORD,
           database: process.env.POSTGRES_DB,
-          entities: [Pdf],
+          entities: [Pdf, Topic, User, Article, Youtube],
           autoLoadEntities: true,
           synchronize: true,
           keepConnectionAlive: false,
         }),
-        TypeOrmModule.forFeature([Pdf]),
+        TypeOrmModule.forFeature([Pdf, Topic, User]),
       ],
       providers: [PdfService],
     }).compile();
     controller = module.get<PdfController>(PdfController);
+    service = module.get<PdfService>(PdfService);
+    repo = module.get(getRepositoryToken(Topic));
   });
 
   afterAll(async () => {
     module.close();
+  });
+
+  afterEach(async () => {
+    await repo.query('TRUNCATE TABLE public."user" CASCADE;');
+    await repo.query('TRUNCATE TABLE public.topic CASCADE;');
+    await repo.query('TRUNCATE TABLE public.pdf CASCADE;');
+  });
+
+  beforeEach(async () => {
+    await repo.query('TRUNCATE TABLE public."user" CASCADE;');
+    await repo.query('TRUNCATE TABLE public.topic CASCADE;');
+    await repo.query('TRUNCATE TABLE public.pdf CASCADE;');
   });
 
   describe('Upload link generation', () => {
@@ -63,6 +84,43 @@ describe('PdfController', () => {
         numPages: 2,
       });
       expect(result.pdfDetails.id).toBeTruthy();
+    });
+  });
+
+  describe('update a single pdf', () => {
+    it('should throw error if pdf does not exist', async () => {
+      const [savedTopic, savedPdf] = await saveOnePdfToTopic(repo);
+      const originalPdf = { ...savedPdf };
+      const pdfUpdate = { lastActive: Date.now() };
+      expect(
+        controller.updatePdf(savedPdf.id + 100, pdfUpdate),
+      ).rejects.toThrow('No pdf found to update!');
+    });
+    it('should update a pdf', async () => {
+      const [savedTopic, savedPdf] = await saveOnePdfToTopic(repo);
+      const originalPdf = { ...savedPdf };
+      const pdfUpdate = { lastActive: Date.now() };
+      const updatedPdf = await controller.updatePdf(savedPdf.id, pdfUpdate);
+      expect(updatedPdf.lastActive).not.toEqual(originalPdf.lastActive);
+    });
+  });
+
+  describe('delete a single pdf', () => {
+    it('should throw error if pdf does not exist', async () => {
+      const [savedTopic, savedPdf] = await saveOnePdfToTopic(repo);
+      const originalPdf = { ...savedPdf };
+      const pdfUpdate = { lastActive: Date.now() };
+      expect(
+        controller.deletePdf(savedPdf.id + 100, pdfUpdate),
+      ).rejects.toThrow('No pdf found to update!');
+    });
+    it('should update a pdf', async () => {
+      const [savedTopic, savedPdf] = await saveOnePdfToTopic(repo);
+      const originalPdf = { ...savedPdf };
+      const pdfUpdate = { lastActive: Date.now() };
+      await controller.deletePdf(savedPdf.id, pdfUpdate);
+      const deletedPdf = await service.findPdfById(savedPdf.id);
+      expect(deletedPdf).toBeFalsy();
     });
   });
 });

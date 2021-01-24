@@ -2,7 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AuthenticationController } from './authentication.controller';
 import { AuthenticationService } from './authentication.service';
 import { TypeOrmModule, getRepositoryToken } from '@nestjs/typeorm';
-import { User } from './user.entity';
+import { Article } from '../article/article.entity';
+import { Topic } from '../topics/topic.entity';
+import { User } from '../authentication/user.entity';
+import { Pdf } from '../pdf/pdf.entity';
+import { Youtube } from '../youtube/youtube.entity';
 import { ConfigModule } from '@nestjs/config';
 import configuration from '../config/config';
 
@@ -27,7 +31,7 @@ describe('AuthenticationController', () => {
           username: process.env.POSTGRES_USER,
           password: process.env.POSTGRES_PASSWORD,
           database: process.env.POSTGRES_DB,
-          entities: [User],
+          entities: [Topic, User, Pdf, Youtube, Article],
           autoLoadEntities: true,
           synchronize: true,
           keepConnectionAlive: true,
@@ -46,11 +50,11 @@ describe('AuthenticationController', () => {
   });
 
   afterEach(async () => {
-    await repo.query('TRUNCATE TABLE public."user";');
+    await repo.query('TRUNCATE TABLE public."user" CASCADE;');
   });
 
   beforeEach(async () => {
-    await repo.query('TRUNCATE TABLE public."user";');
+    await repo.query('TRUNCATE TABLE public."user" CASCADE;');
   });
 
   describe('Signup route', () => {
