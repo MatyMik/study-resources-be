@@ -28,6 +28,11 @@ export class AuthenticationService {
     return user;
   }
 
+  async findById(id: number) {
+    const [user] = await this.user.find({ id });
+    return user;
+  }
+
   async validatePassword(password: string, hashedPassword: string) {
     const isEqual: boolean = await bcrypt.compareSync(password, hashedPassword);
     return isEqual;

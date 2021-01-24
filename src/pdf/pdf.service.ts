@@ -6,6 +6,7 @@ import { ConfigService } from '@nestjs/config';
 import { BadRequestError } from '../errors/bad-request-error';
 import { PdfDto } from './dto/create-pdf-dto';
 import { Pdf } from './pdf.entity';
+import { PdfUpdateDto } from './dto/pdf-update-dto';
 
 @Injectable()
 export class PdfService {
@@ -44,5 +45,22 @@ export class PdfService {
     newPdf.numPages = pdfData.numPages;
     const [savedPdf] = await this.pdf.save<Pdf>([newPdf]);
     return savedPdf;
+  }
+
+  async updatePdf(pdf: Pdf, newPdfValues: PdfUpdateDto) {
+    pdf.fileName = newPdfValues.fileName || pdf.fileName;
+    pdf.numPages = newPdfValues.numPages || pdf.numPages;
+    pdf.lastActive = newPdfValues.lastActive || pdf.lastActive;
+    const [savedPdf] = await this.pdf.save<Pdf>([pdf]);
+    return savedPdf;
+  }
+
+  async findPdfById(id: number) {
+    const [pdf] = await this.pdf.find({ id });
+    return pdf;
+  }
+
+  async deletePdf(pdfId: number) {
+    await this.pdf.delete(pdfId);
   }
 }
