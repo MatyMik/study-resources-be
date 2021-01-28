@@ -1,5 +1,6 @@
 export class PdfDto {
-  fileName: string;
+  title: string;
   url: string;
   numPages: number;
+  topicId: number;
 }

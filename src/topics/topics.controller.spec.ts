@@ -91,7 +91,7 @@ describe('TopicsController', () => {
       );
 
       const returnedTopics = await controller.getTopics(savedUser.id);
-      expect(returnedTopics).toEqual(savedTopics);
+      expect(returnedTopics.topics).toEqual(savedTopics);
     });
   });
   describe('add a topic', () => {
@@ -229,7 +229,6 @@ describe('TopicsController', () => {
       ] = await repo.query(`SELECT id, title, "lastActive" FROM public.article 
       WHERE title = '${articleTitle}' AND "topicId" = ${savedTopic.id};`);
 
-      console.log(savedTopic);
       await controller.deleteTopic(savedTopic.id);
 
       const [
@@ -241,7 +240,6 @@ describe('TopicsController', () => {
         topicAfterDelete,
       ] = await repo.query(`SELECT id, title, "lastActive" FROM public.topic 
       WHERE id = ${savedTopic.id};`);
-      console.log(topicAfterDelete);
 
       expect(articleAfterDelete).toBeFalsy();
       expect(topicAfterDelete).toBeFalsy();

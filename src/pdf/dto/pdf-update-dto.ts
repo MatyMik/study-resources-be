@@ -1,5 +1,5 @@
 export class PdfUpdateDto {
-  fileName?: string;
+  title?: string;
   numPages?: number;
   lastActive: number;
 }

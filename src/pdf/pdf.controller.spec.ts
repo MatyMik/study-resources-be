@@ -7,9 +7,15 @@ import { TypeOrmModule, getRepositoryToken } from '@nestjs/typeorm';
 import { Pdf } from './pdf.entity';
 import { Topic } from '../topics/topic.entity';
 import { User } from '../authentication/user.entity';
-import { saveOnePdfToTopic } from '../tests/test-helpers';
+import {
+  saveOnePdfToTopic,
+  createOneTopic,
+  saveMultiplePdfsToTopic,
+} from '../tests/test-helpers';
 import { Article } from '../article/article.entity';
 import { Youtube } from '../youtube/youtube.entity';
+import { TopicsService } from '../topics/topics.service';
+import { AuthenticationService } from '../authentication/authentication.service';
 
 describe('PdfController', () => {
   let controller;
@@ -36,7 +42,7 @@ describe('PdfController', () => {
         }),
         TypeOrmModule.forFeature([Pdf, Topic, User]),
       ],
-      providers: [PdfService],
+      providers: [PdfService, TopicsService, AuthenticationService],
     }).compile();
     controller = module.get<PdfController>(PdfController);
     service = module.get<PdfService>(PdfService);
@@ -60,8 +66,15 @@ describe('PdfController', () => {
   });
 
   describe('Upload link generation', () => {
+    it('should throw an error if user is not found', async () => {
+      const topic = await createOneTopic(repo);
+      expect(
+        controller.getSingleUploadUrl('file', topic.userId + 100),
+      ).rejects.toThrow('User not found!');
+    });
     it('should return an upload link', async () => {
-      const result = await controller.getSingleUploadUrl('file');
+      const topic = await createOneTopic(repo);
+      const result = await controller.getSingleUploadUrl('file', topic.userId);
       expect(typeof result.url).toEqual('string');
     });
 
@@ -79,7 +92,7 @@ describe('PdfController', () => {
 
     it('should save the pdf to the database and return it with an id', async () => {
       const result = await controller.savePdf({
-        fileName: 'asd',
+        title: 'asd',
         url: 'asdf',
         numPages: 2,
       });
@@ -121,6 +134,20 @@ describe('PdfController', () => {
       await controller.deletePdf(savedPdf.id, pdfUpdate);
       const deletedPdf = await service.findPdfById(savedPdf.id);
       expect(deletedPdf).toBeFalsy();
+    });
+  });
+
+  describe('get all books', () => {
+    it('should throw error if topic is not found', async () => {
+      const topic = await createOneTopic(repo);
+      expect(controller.getAllPdfs(topic.id + 100, 1, 2)).rejects.toThrow(
+        'Topic not found!',
+      );
+    });
+    it('should return the selected pdfs', async () => {
+      const [topic, pdfs] = await saveMultiplePdfsToTopic(repo);
+      const foundPdfs = await controller.getAllPdfs(topic.id, 1, 2);
+      expect(pdfs.slice(0, 2)).toEqual(foundPdfs);
     });
   });
 });

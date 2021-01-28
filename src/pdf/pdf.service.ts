@@ -7,6 +7,7 @@ import { BadRequestError } from '../errors/bad-request-error';
 import { PdfDto } from './dto/create-pdf-dto';
 import { Pdf } from './pdf.entity';
 import { PdfUpdateDto } from './dto/pdf-update-dto';
+import { Topic } from '../topics/topic.entity';
 
 @Injectable()
 export class PdfService {
@@ -15,11 +16,11 @@ export class PdfService {
     @InjectRepository(Pdf) private pdf: Repository<Pdf>,
   ) {}
 
-  async getPdfUploadLink(fileName: string) {
+  async getPdfUploadLink(title: string, userId: number) {
     const bucketName = this.configService.get<string>('bucketName'); //process.env.BUCKET_NAME;
     const projectId = this.configService.get<string>('projectId'); //process.env.PROJECT_ID; //
 
-    if (!fileName) {
+    if (!title) {
       throw new BadRequestError('File name must be provided');
     }
 
@@ -33,22 +34,23 @@ export class PdfService {
 
     const [url] = await storage
       .bucket(bucketName)
-      .file(`1/${fileName}`)
+      .file(`${userId}/${title}`)
       .getSignedUrl(options);
     return url;
   }
 
-  async saveOnePdf(pdfData: PdfDto) {
+  async saveOnePdf(pdfData: PdfDto, topic: Topic) {
     const newPdf: Pdf = Pdf.create();
     newPdf.url = pdfData.url;
-    newPdf.fileName = pdfData.fileName;
+    newPdf.title = pdfData.title;
     newPdf.numPages = pdfData.numPages;
+    newPdf.topic = topic;
     const [savedPdf] = await this.pdf.save<Pdf>([newPdf]);
     return savedPdf;
   }
 
   async updatePdf(pdf: Pdf, newPdfValues: PdfUpdateDto) {
-    pdf.fileName = newPdfValues.fileName || pdf.fileName;
+    pdf.title = newPdfValues.title || pdf.title;
     pdf.numPages = newPdfValues.numPages || pdf.numPages;
     pdf.lastActive = newPdfValues.lastActive || pdf.lastActive;
     const [savedPdf] = await this.pdf.save<Pdf>([pdf]);
@@ -62,5 +64,15 @@ export class PdfService {
 
   async deletePdf(pdfId: number) {
     await this.pdf.delete(pdfId);
+  }
+
+  async findAllPdfs(topic: Topic, page: number, itemsPerPage: number) {
+    const limit = itemsPerPage;
+    const offset = (page - 1) * itemsPerPage;
+    return await this.pdf.find({
+      where: { topic },
+      skip: offset,
+      take: limit,
+    });
   }
 }
