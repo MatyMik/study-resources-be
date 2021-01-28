@@ -10,7 +10,10 @@ export class TopicsService {
   constructor(@InjectRepository(Topic) private topic: Repository<Topic>) {}
 
   async getTopics(userId: number) {
-    return await this.topic.find({ where: { user: userId } });
+    return await this.topic.find({
+      where: { user: userId },
+      order: { lastActive: 'DESC' },
+    });
   }
 
   async findByTitle(title: string, user: User) {

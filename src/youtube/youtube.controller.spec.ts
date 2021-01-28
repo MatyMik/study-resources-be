@@ -84,7 +84,9 @@ describe('YoutubeController', () => {
         1,
         2,
       );
-      expect(foundYoutubeLinks).toEqual(savedYoutubeLinks.slice(0, 2));
+      expect(foundYoutubeLinks.resources).toEqual(
+        savedYoutubeLinks.slice(0, 2),
+      );
     });
   });
 

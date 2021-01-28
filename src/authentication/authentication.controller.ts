@@ -66,7 +66,7 @@ export class AuthenticationController {
       httpOnly: true,
     });
     res.setHeader('Set-Cookie', tokenCookie);
-    return { token };
+    return { token, userId: registeredUser.id };
   }
 
   @Get('refreshtoken')
@@ -80,6 +80,9 @@ export class AuthenticationController {
     );
     if (!user) throw new NotAuthorizedError('Invalid refresh token!');
 
+    const userNeeded = await this.authenticationService.findUserByEmail(
+      user['email'].toString(),
+    );
     const userData = { email: user['email'] };
 
     const token = await this.authenticationService.createJwtToken(
@@ -99,6 +102,6 @@ export class AuthenticationController {
       httpOnly: true,
     });
     res.setHeader('Set-Cookie', tokenCookie);
-    return { token };
+    return { token, userId: userNeeded.id };
   }
 }

@@ -29,11 +29,12 @@ export class YoutubeController {
   ) {
     const topic = await this.topicService.findTopicById(topicId);
     if (!topic) throw new NotFoundError('No topic found!');
-    return await this.youtubeService.findAllYoutubeLinksInTopic(
+    const resources = await this.youtubeService.findAllYoutubeLinksInTopic(
       topic,
       page,
       itemsPerPage,
     );
+    return { resources };
   }
 
   @Get(':youtubeId')

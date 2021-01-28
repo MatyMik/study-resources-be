@@ -29,11 +29,12 @@ export class ArticleController {
   ) {
     const topic = await this.topicService.findTopicById(topicId);
     if (!topic) throw new NotFoundError('No topic found!');
-    return await this.articleService.findAllArticlesInTopic(
+    const resources = await this.articleService.findAllArticlesInTopic(
       topic,
       page,
       itemsPerPage,
     );
+    return { resources };
   }
 
   @Get(':articleId')

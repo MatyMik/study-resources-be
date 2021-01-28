@@ -19,7 +19,7 @@ export class Pdf extends BaseEntity {
   lastPageRead: number;
 
   @Column({ nullable: false })
-  fileName: string;
+  title: string;
 
   @Column({ nullable: false })
   url: string;
