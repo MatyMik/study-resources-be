@@ -6,9 +6,11 @@ import { TypeOrmModule, getRepositoryToken } from '@nestjs/typeorm';
 import { Pdf } from './pdf.entity';
 import { Topic } from '../topics/topic.entity';
 import { User } from '../authentication/user.entity';
-import { saveOnePdfToTopic } from '../tests/test-helpers';
+import { saveOnePdfToTopic, createOneTopic } from '../tests/test-helpers';
 import { Article } from '../article/article.entity';
 import { Youtube } from '../youtube/youtube.entity';
+import { AuthenticationService } from '../authentication/authentication.service';
+import { TopicsService } from '../topics/topics.service';
 
 export type MockType<T> = {
   [P in keyof T]: jest.Mock<any>;
@@ -34,7 +36,7 @@ jest.mock('@google-cloud/storage', () => {
 
 const pdf = {
   url: 'asdf',
-  fileName: 'asdf',
+  title: 'asdf',
   numPages: 343,
 };
 
@@ -45,7 +47,7 @@ describe('PdfService', () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      providers: [PdfService],
+      providers: [PdfService, AuthenticationService, TopicsService],
       imports: [
         ConfigModule.forRoot({ load: [configuration] }),
         TypeOrmModule.forRoot({
@@ -77,24 +79,26 @@ describe('PdfService', () => {
     });
 
     it('should throw error if file name is not supplied', async () => {
-      const fileName = 'pdf';
-      try {
-        await service.getPdfUploadLink(fileName);
-      } catch (err) {
-        expect(err.message).toEqual('File name must be provided');
-      }
+      const topic = await createOneTopic(repo);
+      const title = 'pdf';
+      expect(service.getPdfUploadLink(undefined, undefined)).rejects.toThrow(
+        'File name must be provided',
+      );
     });
 
     it('should return a google storage link', async () => {
-      const fileName = 'pdf';
-      const pdfDetails = await service.getPdfUploadLink(fileName);
+      const topic = await createOneTopic(repo);
+      const title = 'pdf';
+      const pdfDetails = await service.getPdfUploadLink(title, topic.userId);
       expect(pdfDetails).toBeDefined();
     });
   });
 
   describe('save pdf details to db', () => {
     it('should return the saved user', async () => {
-      const savedPdf = await service.saveOnePdf(pdf);
+      const topic = await createOneTopic(repo);
+      const pdfData = { ...pdf, topicId: topic.id };
+      const savedPdf = await service.saveOnePdf(pdfData, topic);
       expect(savedPdf.id).toBeTruthy();
     });
   });
@@ -120,6 +124,13 @@ describe('PdfService', () => {
       await service.deletePdf(pdf.id);
       const deletedPdf = await service.findPdfById(pdf.id);
       expect(deletedPdf).toBeFalsy();
+    });
+  });
+  describe('find all pdfs of a topic', () => {
+    it('should return all the saved pdfs of a given topic', async () => {
+      const [topic, pdf] = await saveOnePdfToTopic(repo);
+      const savedPdfs = await service.findAllPdfs(topic, 1, 2);
+      expect(savedPdfs.slice(0, 2)).not.toEqual(pdf);
     });
   });
 });

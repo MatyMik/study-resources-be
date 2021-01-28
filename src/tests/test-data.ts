@@ -7,3 +7,4 @@ export const numPages = 333;
 export const lastPageRead = 200;
 export const url = 'https://localhost';
 export const youtubeTitle = 'youtubne';
+export const pdfTitle = 'sadfsad';

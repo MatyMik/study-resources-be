@@ -81,7 +81,7 @@ describe('ArticleController', () => {
         1,
         2,
       );
-      expect(foundArticles).toEqual(savedArticles.slice(0, 2));
+      expect(foundArticles.resources).toEqual(savedArticles.slice(0, 2));
     });
   });
 

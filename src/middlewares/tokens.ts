@@ -1,5 +1,5 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
-import { verify } from 'jsonwebtoken';
+import { verify, decode } from 'jsonwebtoken';
 import { NotAuthorizedError } from '../errors/not-authorized-error';
 
 @Injectable()

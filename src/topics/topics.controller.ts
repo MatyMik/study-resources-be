@@ -2,7 +2,6 @@ import {
   Controller,
   Get,
   Post,
-  Query,
   Body,
   Put,
   Delete,
@@ -21,12 +20,13 @@ export class TopicsController {
     private topicService: TopicsService,
     private user: AuthenticationService,
   ) {}
-  @Get('/alltopics')
-  async getTopics(@Query('userId') userId: number) {
-    return await this.topicService.getTopics(userId);
+  @Get('all/:userId')
+  async getTopics(@Param('userId') userId: number) {
+    const topics = await this.topicService.getTopics(userId);
+    return { topics };
   }
 
-  @Post('/add')
+  @Post('add')
   async addTopic(@Body() topic: TopicDto) {
     const { title, userId } = topic;
     const foundUser = await this.user.findById(userId);
@@ -35,7 +35,7 @@ export class TopicsController {
     return await this.topicService.addTopic(title, foundUser);
   }
 
-  @Put('/update')
+  @Put('update')
   async updateTopic(@Body() topic: TopicUpdateDto) {
     const { topicId } = topic;
     const foundTopic = await this.topicService.findTopicById(topicId);
@@ -44,10 +44,11 @@ export class TopicsController {
     return updatedTopic;
   }
 
-  @Delete('/:topicId')
+  @Delete(':topicId')
   async deleteTopic(@Param('topicId') topicId: number) {
     const foundTopic = await this.topicService.findTopicById(topicId);
     if (!foundTopic) throw new NotFoundError('Topic does not exist!');
     await this.topicService.deleteTopic(topicId);
+    return;
   }
 }

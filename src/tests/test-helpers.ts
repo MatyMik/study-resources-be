@@ -9,6 +9,7 @@ import {
   numPages,
   lastPageRead,
   youtubeTitle,
+  pdfTitle,
 } from './test-data';
 
 const hashPassword = async (password: string) => {
@@ -31,7 +32,7 @@ export const createOneTopic = async (repo) => {
     `INSERT INTO public.topic(title, "userId") VALUES('${topicTitle}', ${savedUser.id});`,
   );
   const [savedTopic] = await repo.query(
-    `SELECT id, title, "lastActive" FROM public.topic 
+    `SELECT id, title, "lastActive", "userId" FROM public.topic 
       WHERE title = '${topicTitle}';`,
   );
 
@@ -57,14 +58,14 @@ export const saveOnePdfToTopic = async (repo) => {
   const savedTopic = await createOneTopic(repo);
 
   await repo.query(
-    `INSERT INTO public.pdf("fileName", "topicId", "lastPageRead", "numPages", url) 
+    `INSERT INTO public.pdf(title, "topicId", "lastPageRead", "numPages", url) 
     VALUES('${fileName}', ${savedTopic.id}, ${lastPageRead}, ${numPages}, '${url}');`,
   );
 
   const [
     savedPdf,
-  ] = await repo.query(`SELECT id, "fileName", "topicId", "lastPageRead", "numPages", url FROM public.pdf 
-    WHERE "fileName" = '${fileName}' AND "topicId" = ${savedTopic.id};`);
+  ] = await repo.query(`SELECT id, title, "topicId", "lastPageRead", "numPages", url FROM public.pdf 
+    WHERE "title" = '${fileName}' AND "topicId" = ${savedTopic.id};`);
 
   return [savedTopic, savedPdf];
 };
@@ -118,4 +119,22 @@ export const saveMultipleYoutubeLinksToTopic = async (repo) => {
     WHERE "topicId" = ${savedTopic.id};`);
 
   return [savedTopic, savedYoutubeLinks];
+};
+
+export const saveMultiplePdfsToTopic = async (repo) => {
+  const savedTopic = await createOneTopic(repo);
+
+  await repo.query(
+    `INSERT INTO public.pdf(title, url, "topicId", "numPages") 
+    VALUES('${pdfTitle}', '${url}', ${savedTopic.id}, ${numPages}),
+    ('${pdfTitle}', '${url}', ${savedTopic.id}, ${numPages}),
+    ('${pdfTitle}', '${url}', ${savedTopic.id}, ${numPages}),
+    ('${pdfTitle}', '${url}', ${savedTopic.id}, ${numPages}),
+    ('${pdfTitle}', '${url}', ${savedTopic.id}, ${numPages});`,
+  );
+
+  const savedPdfs = await repo.query(`SELECT id, title, url, "lastActive", "numPages", "lastPageRead" FROM public.pdf 
+    WHERE "topicId" = ${savedTopic.id};`);
+
+  return [savedTopic, savedPdfs];
 };
