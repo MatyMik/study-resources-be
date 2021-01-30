@@ -146,8 +146,8 @@ describe('PdfController', () => {
     });
     it('should return the selected pdfs', async () => {
       const [topic, pdfs] = await saveMultiplePdfsToTopic(repo);
-      const foundPdfs = await controller.getAllPdfs(topic.id, 1, 2);
-      expect(pdfs.slice(0, 2)).toEqual(foundPdfs);
+      const foundPdfs = await controller.getAllPdfs(topic.id, 1, 2, false);
+      expect(pdfs.slice(0, 2)).toEqual(foundPdfs.resources);
     });
   });
 });

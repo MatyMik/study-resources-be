@@ -26,6 +26,7 @@ export class ArticleController {
     @Param('topicId') topicId: number,
     @Query('page') page: number,
     @Query('itemsPerPage') itemsPerPage: number,
+    @Query('archived') archived: boolean,
   ) {
     const topic = await this.topicService.findTopicById(topicId);
     if (!topic) throw new NotFoundError('No topic found!');
@@ -33,6 +34,7 @@ export class ArticleController {
       topic,
       page,
       itemsPerPage,
+      archived,
     );
     return { resources };
   }
@@ -43,7 +45,7 @@ export class ArticleController {
   }
 
   @Post('add')
-  async saveArticle(@Body('articleDetails') articleData: ArticleDto) {
+  async saveArticle(@Body('resourceData') articleData: ArticleDto) {
     if (!articleData) throw new BadRequestError('Not enough data!');
     const { url, title, topicId } = articleData;
     if (!title || !url) throw new BadRequestError('Not enough data!');
@@ -59,7 +61,7 @@ export class ArticleController {
   @Put('update/:articleId')
   async updateArticle(
     @Param('articleId') articleId: number,
-    article: ArticleUpdateDto,
+    @Body() article: ArticleUpdateDto,
   ) {
     const foundArticle = await this.articleService.findArticleById(articleId);
     if (!foundArticle) throw new NotFoundError('No article found to update!');

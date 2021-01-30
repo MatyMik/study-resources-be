@@ -26,6 +26,7 @@ export class YoutubeController {
     @Param('topicId') topicId: number,
     @Query('page') page: number,
     @Query('itemsPerPage') itemsPerPage: number,
+    @Query('archived') archived: boolean,
   ) {
     const topic = await this.topicService.findTopicById(topicId);
     if (!topic) throw new NotFoundError('No topic found!');
@@ -33,6 +34,7 @@ export class YoutubeController {
       topic,
       page,
       itemsPerPage,
+      archived,
     );
     return { resources };
   }
@@ -43,7 +45,7 @@ export class YoutubeController {
   }
 
   @Post('add')
-  async saveYoutubeLink(@Body('youtubeDetails') youtubeData: YoutubeDto) {
+  async saveYoutubeLink(@Body('resourceData') youtubeData: YoutubeDto) {
     if (!youtubeData) throw new BadRequestError('Not enough data!');
     const { url, title, topicId } = youtubeData;
     if (!title || !url) throw new BadRequestError('Not enough data!');
@@ -59,7 +61,7 @@ export class YoutubeController {
   @Put('update/:youtubeId')
   async updateYoutubeLink(
     @Param('youtubeId') youtubeId: number,
-    youtube: YoutubeUpdateDto,
+    @Body() youtube: YoutubeUpdateDto,
   ) {
     const foundYoutubeLink = await this.youtubeService.findYoutubeLinkById(
       youtubeId,

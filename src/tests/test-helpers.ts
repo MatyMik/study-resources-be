@@ -48,7 +48,7 @@ export const saveOneArticleToTopic = async (repo) => {
 
   const [
     savedArticle,
-  ] = await repo.query(`SELECT id, url, title, "lastActive" FROM public.article 
+  ] = await repo.query(`SELECT id, url, title, "lastActive", archived FROM public.article 
   WHERE title = '${articleTitle}' AND "topicId" = ${savedTopic.id};`);
 
   return [savedTopic, savedArticle];
@@ -64,7 +64,7 @@ export const saveOnePdfToTopic = async (repo) => {
 
   const [
     savedPdf,
-  ] = await repo.query(`SELECT id, title, "topicId", "lastPageRead", "numPages", url FROM public.pdf 
+  ] = await repo.query(`SELECT id, title, "topicId", "lastPageRead", "numPages", url, archived FROM public.pdf 
     WHERE "title" = '${fileName}' AND "topicId" = ${savedTopic.id};`);
 
   return [savedTopic, savedPdf];
@@ -75,15 +75,27 @@ export const saveMultipleArticlesToTopic = async (repo) => {
 
   await repo.query(
     `INSERT INTO public.article(title, url, "topicId") 
-    VALUES('${articleTitle}', '${url}', ${savedTopic.id}),
-    ('${articleTitle}', '${url}', ${savedTopic.id}),
-    ('${articleTitle}', '${url}', ${savedTopic.id}),
-    ('${articleTitle}', '${url}', ${savedTopic.id}),
-    ('${articleTitle}', '${url}', ${savedTopic.id});`,
+    VALUES('${articleTitle}', '${url}', ${savedTopic.id});`,
   );
 
-  const savedArticles = await repo.query(`SELECT id, title, url, "lastActive" FROM public.article 
-    WHERE "topicId" = ${savedTopic.id};`);
+  await repo.query(
+    `INSERT INTO public.article(title, url, "topicId") 
+    VALUES('${articleTitle}', '${url}', ${savedTopic.id});`,
+  );
+
+  await repo.query(
+    `INSERT INTO public.article(title, url, "topicId") 
+    VALUES('${articleTitle}', '${url}', ${savedTopic.id});`,
+  );
+
+  await repo.query(
+    `INSERT INTO public.article(title, url, "topicId") 
+    VALUES('${articleTitle}', '${url}', ${savedTopic.id});`,
+  );
+
+  const savedArticles = await repo.query(`SELECT id, title, url, "lastActive", archived FROM public.article 
+    WHERE "topicId" = ${savedTopic.id}
+    ORDER BY "lastActive" DESC;`);
 
   return [savedTopic, savedArticles];
 };
@@ -97,7 +109,7 @@ export const saveOneYoutubeLinkToTopic = async (repo) => {
 
   const [
     savedYoutubeLink,
-  ] = await repo.query(`SELECT id, url, title, "lastActive" FROM public.youtube 
+  ] = await repo.query(`SELECT id, url, title, "lastActive", archived FROM public.youtube 
   WHERE title = '${youtubeTitle}' AND "topicId" = ${savedTopic.id};`);
 
   return [savedTopic, savedYoutubeLink];
@@ -108,15 +120,27 @@ export const saveMultipleYoutubeLinksToTopic = async (repo) => {
 
   await repo.query(
     `INSERT INTO public.youtube(title, url, "topicId") 
-    VALUES('${youtubeTitle}', '${url}', ${savedTopic.id}),
-    ('${youtubeTitle}', '${url}', ${savedTopic.id}),
-    ('${youtubeTitle}', '${url}', ${savedTopic.id}),
-    ('${youtubeTitle}', '${url}', ${savedTopic.id}),
-    ('${youtubeTitle}', '${url}', ${savedTopic.id});`,
+    VALUES('${youtubeTitle}', '${url}', ${savedTopic.id});`,
   );
 
-  const savedYoutubeLinks = await repo.query(`SELECT id, title, url, "lastActive" FROM public.youtube 
-    WHERE "topicId" = ${savedTopic.id};`);
+  await repo.query(
+    `INSERT INTO public.youtube(title, url, "topicId") 
+    VALUES('${youtubeTitle}', '${url}', ${savedTopic.id});`,
+  );
+
+  await repo.query(
+    `INSERT INTO public.youtube(title, url, "topicId") 
+    VALUES('${youtubeTitle}', '${url}', ${savedTopic.id});`,
+  );
+
+  await repo.query(
+    `INSERT INTO public.youtube(title, url, "topicId") 
+    VALUES('${youtubeTitle}', '${url}', ${savedTopic.id});`,
+  );
+
+  const savedYoutubeLinks = await repo.query(`SELECT id, title, url, "lastActive", archived FROM public.youtube 
+    WHERE "topicId" = ${savedTopic.id}
+    ORDER BY "lastActive" DESC;`);
 
   return [savedTopic, savedYoutubeLinks];
 };
@@ -126,15 +150,27 @@ export const saveMultiplePdfsToTopic = async (repo) => {
 
   await repo.query(
     `INSERT INTO public.pdf(title, url, "topicId", "numPages") 
-    VALUES('${pdfTitle}', '${url}', ${savedTopic.id}, ${numPages}),
-    ('${pdfTitle}', '${url}', ${savedTopic.id}, ${numPages}),
-    ('${pdfTitle}', '${url}', ${savedTopic.id}, ${numPages}),
-    ('${pdfTitle}', '${url}', ${savedTopic.id}, ${numPages}),
-    ('${pdfTitle}', '${url}', ${savedTopic.id}, ${numPages});`,
+    VALUES('${pdfTitle}', '${url}', ${savedTopic.id}, ${numPages});`,
   );
 
-  const savedPdfs = await repo.query(`SELECT id, title, url, "lastActive", "numPages", "lastPageRead" FROM public.pdf 
-    WHERE "topicId" = ${savedTopic.id};`);
+  await repo.query(
+    `INSERT INTO public.pdf(title, url, "topicId", "numPages") 
+    VALUES('${pdfTitle}', '${url}', ${savedTopic.id}, ${numPages});`,
+  );
+
+  await repo.query(
+    `INSERT INTO public.pdf(title, url, "topicId", "numPages") 
+    VALUES('${pdfTitle}', '${url}', ${savedTopic.id}, ${numPages});`,
+  );
+
+  await repo.query(
+    `INSERT INTO public.pdf(title, url, "topicId", "numPages") 
+    VALUES('${pdfTitle}', '${url}', ${savedTopic.id}, ${numPages});`,
+  );
+
+  const savedPdfs = await repo.query(`SELECT id, title, url, "lastActive", "numPages", "lastPageRead", archived FROM public.pdf 
+    WHERE "topicId" = ${savedTopic.id}
+    ORDER BY "lastActive" DESC;`);
 
   return [savedTopic, savedPdfs];
 };

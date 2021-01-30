@@ -75,13 +75,13 @@ describe('PdfService', () => {
 
   describe('Get one time google storage link', () => {
     it('should be defined', async () => {
-      expect(service.getPdfUploadLink).toBeDefined();
+      expect(service.getPdfLink).toBeDefined();
     });
 
     it('should throw error if file name is not supplied', async () => {
       const topic = await createOneTopic(repo);
       const title = 'pdf';
-      expect(service.getPdfUploadLink(undefined, undefined)).rejects.toThrow(
+      expect(service.getPdfLink(undefined, undefined)).rejects.toThrow(
         'File name must be provided',
       );
     });
@@ -89,7 +89,7 @@ describe('PdfService', () => {
     it('should return a google storage link', async () => {
       const topic = await createOneTopic(repo);
       const title = 'pdf';
-      const pdfDetails = await service.getPdfUploadLink(title, topic.userId);
+      const pdfDetails = await service.getPdfLink(title, topic.userId);
       expect(pdfDetails).toBeDefined();
     });
   });
@@ -129,7 +129,7 @@ describe('PdfService', () => {
   describe('find all pdfs of a topic', () => {
     it('should return all the saved pdfs of a given topic', async () => {
       const [topic, pdf] = await saveOnePdfToTopic(repo);
-      const savedPdfs = await service.findAllPdfs(topic, 1, 2);
+      const savedPdfs = await service.findAllPdfs(topic, 1, 2, false);
       expect(savedPdfs.slice(0, 2)).not.toEqual(pdf);
     });
   });

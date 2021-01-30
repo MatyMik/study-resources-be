@@ -8,6 +8,7 @@ import { PdfDto } from './dto/create-pdf-dto';
 import { Pdf } from './pdf.entity';
 import { PdfUpdateDto } from './dto/pdf-update-dto';
 import { Topic } from '../topics/topic.entity';
+import { ActionTypes } from './dto/google-storage-action-enum';
 
 @Injectable()
 export class PdfService {
@@ -16,7 +17,11 @@ export class PdfService {
     @InjectRepository(Pdf) private pdf: Repository<Pdf>,
   ) {}
 
-  async getPdfUploadLink(title: string, userId: number) {
+  async getPdfLink(
+    title: string,
+    userId: number,
+    action: ActionTypes = ActionTypes.WRITE,
+  ) {
     const bucketName = this.configService.get<string>('bucketName'); //process.env.BUCKET_NAME;
     const projectId = this.configService.get<string>('projectId'); //process.env.PROJECT_ID; //
 
@@ -27,7 +32,7 @@ export class PdfService {
     const storage = new Storage({ projectId });
     const options: GetSignedUrlConfig = {
       version: 'v4',
-      action: 'write',
+      action,
       expires: Date.now() + 15 * 60 * 1000,
       contentType: 'application/pdf',
     };
@@ -51,8 +56,9 @@ export class PdfService {
 
   async updatePdf(pdf: Pdf, newPdfValues: PdfUpdateDto) {
     pdf.title = newPdfValues.title || pdf.title;
-    pdf.numPages = newPdfValues.numPages || pdf.numPages;
+    pdf.lastPageRead = newPdfValues.lastPageRead || pdf.lastPageRead;
     pdf.lastActive = newPdfValues.lastActive || pdf.lastActive;
+    pdf.archived = !!newPdfValues.archived;
     const [savedPdf] = await this.pdf.save<Pdf>([pdf]);
     return savedPdf;
   }
@@ -66,11 +72,17 @@ export class PdfService {
     await this.pdf.delete(pdfId);
   }
 
-  async findAllPdfs(topic: Topic, page: number, itemsPerPage: number) {
+  async findAllPdfs(
+    topic: Topic,
+    page: number,
+    itemsPerPage: number,
+    archived: boolean,
+  ) {
     const limit = itemsPerPage;
     const offset = (page - 1) * itemsPerPage;
     return await this.pdf.find({
-      where: { topic },
+      where: { topic, archived },
+      order: { lastActive: 'DESC' },
       skip: offset,
       take: limit,
     });

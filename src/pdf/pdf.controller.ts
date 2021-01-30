@@ -15,8 +15,9 @@ import { PdfUpdateDto } from './dto/pdf-update-dto';
 import { NotFoundError } from '../errors/not-found-error';
 import { AuthenticationService } from '../authentication/authentication.service';
 import { TopicsService } from '../topics/topics.service';
+import { ActionTypes } from './dto/google-storage-action-enum';
 
-@Controller('pdf')
+@Controller('book')
 export class PdfController {
   constructor(
     private pdfService: PdfService,
@@ -33,7 +34,22 @@ export class PdfController {
     }
     const user = await this.user.findById(userId);
     if (!user) throw new NotFoundError('User not found!');
-    const url = await this.pdfService.getPdfUploadLink(title, userId);
+    const url = await this.pdfService.getPdfLink(title, userId);
+    return { url };
+  }
+
+  @Get('downloadurl')
+  async getSingleDownloadUrl(
+    @Query('pdfId') pdfId: number,
+    @Query('userId') userId: number,
+  ) {
+    const pdf = await this.pdfService.findPdfById(pdfId);
+    if (!pdf) throw new NotFoundError('User not found!');
+    const url = await this.pdfService.getPdfLink(
+      pdf.title,
+      userId,
+      ActionTypes.READ,
+    );
     return { url };
   }
 
@@ -49,7 +65,7 @@ export class PdfController {
   }
 
   @Put('update/:pdfId')
-  async updatePdf(@Param('pdfId') pdfId: number, pdf: PdfUpdateDto) {
+  async updatePdf(@Param('pdfId') pdfId: number, @Body() pdf: PdfUpdateDto) {
     const foundPdf = await this.pdfService.findPdfById(pdfId);
     if (!foundPdf) throw new NotFoundError('No pdf found to update!');
     return await this.pdfService.updatePdf(foundPdf, pdf);
@@ -61,14 +77,21 @@ export class PdfController {
     if (!foundPdf) throw new NotFoundError('No pdf found to update!');
     return await this.pdfService.deletePdf(pdfId);
   }
-  @Get(':topicId')
+  @Get('all/:topicId')
   async getAllPdfs(
     @Param('topicId') topicId: number,
     @Query('page') page: number,
     @Query('itemsPerPage') itemsPerPage: number,
+    @Query('archived') archived: boolean,
   ) {
     const topic = await this.topic.findTopicById(topicId);
     if (!topic) throw new NotFoundError('Topic not found!');
-    return await this.pdfService.findAllPdfs(topic, page, itemsPerPage);
+    const resources = await this.pdfService.findAllPdfs(
+      topic,
+      page,
+      itemsPerPage,
+      archived,
+    );
+    return { resources };
   }
 }
