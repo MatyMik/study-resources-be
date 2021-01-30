@@ -1,5 +1,6 @@
 export class PdfUpdateDto {
   title?: string;
-  numPages?: number;
+  lastPageRead?: number;
   lastActive: number;
+  archived?: boolean;
 }

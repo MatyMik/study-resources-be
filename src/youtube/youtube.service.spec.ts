@@ -117,6 +117,7 @@ describe('ArticleController', () => {
         topic,
         1,
         2,
+        false,
       );
       expect(savedYoutubeLinks).toEqual(youtubeLinks.slice(0, 2));
     });

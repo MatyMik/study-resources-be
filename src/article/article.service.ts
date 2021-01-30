@@ -23,6 +23,8 @@ export class ArticleService {
 
   async updateArticle(article: Article, newArticleValues: ArticleUpdateDto) {
     article.lastActive = newArticleValues.lastActive || article.lastActive;
+    article.title = newArticleValues.title || article.title;
+    article.archived = newArticleValues.archived || article.archived;
     const [savedArticle] = await this.article.save<Article>([article]);
     return savedArticle;
   }
@@ -40,11 +42,13 @@ export class ArticleService {
     topic: Topic,
     page: number,
     itemsPerPage: number,
+    archived: boolean,
   ) {
     const limit = itemsPerPage;
     const offset = (page - 1) * itemsPerPage;
     return await this.article.find({
-      where: { topic },
+      where: { topic, archived },
+      order: { lastActive: 'DESC' },
       skip: offset,
       take: limit,
     });

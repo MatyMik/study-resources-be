@@ -29,4 +29,7 @@ export class Pdf extends BaseEntity {
 
   @Column({ type: 'bigint', default: Date.now() })
   lastActive: number;
+
+  @Column({ default: false })
+  archived: boolean;
 }

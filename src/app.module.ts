@@ -25,7 +25,7 @@ import { Topic } from './topics/topic.entity';
       database: process.env.POSTGRES_DB,
       entities: [Pdf, Youtube, Article, User, Topic],
       autoLoadEntities: true,
-      synchronize: false,
+      synchronize: true,
       keepConnectionAlive: true,
     }),
     PdfModule,

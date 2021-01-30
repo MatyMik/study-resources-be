@@ -81,7 +81,7 @@ export class AuthenticationController {
     if (!user) throw new NotAuthorizedError('Invalid refresh token!');
 
     const userNeeded = await this.authenticationService.findUserByEmail(
-      user['email'].toString(),
+      user['email'],
     );
     const userData = { email: user['email'] };
 

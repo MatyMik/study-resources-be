@@ -1,7 +1,7 @@
 [
     {
-      "origin": ["http://localhost:3001"],
-      "method": ["PUT"],
+      "origin": ["*"],
+      "method": ["PUT", "GET"],
       "responseHeader": ["*"],
       "max-age": 1200   }
 ]

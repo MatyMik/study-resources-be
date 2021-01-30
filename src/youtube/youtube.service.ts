@@ -43,11 +43,13 @@ export class YoutubeService {
     topic: Topic,
     page: number,
     itemsPerPage: number,
+    archived: boolean,
   ) {
     const limit = itemsPerPage;
     const offset = (page - 1) * itemsPerPage;
     return await this.youtube.find({
-      where: { topic },
+      where: { topic, archived },
+      order: { lastActive: 'DESC' },
       skip: offset,
       take: limit,
       cache: true,
