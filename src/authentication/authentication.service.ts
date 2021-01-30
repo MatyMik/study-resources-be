@@ -24,7 +24,7 @@ export class AuthenticationService {
   }
 
   async findUserByEmail(email: string) {
-    const [user] = await this.user.find({ email });
+    const [user] = await this.user.find({ where: { email } });
     return user;
   }
 

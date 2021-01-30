@@ -80,6 +80,7 @@ describe('ArticleController', () => {
         savedTopic.id,
         1,
         2,
+        false,
       );
       expect(foundArticles.resources).toEqual(savedArticles.slice(0, 2));
     });

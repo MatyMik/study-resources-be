@@ -107,7 +107,12 @@ describe('ArticleService', () => {
   describe('find all articles in topic', () => {
     it('should return all the saved articles in given topic', async () => {
       const [topic, articles] = await saveMultipleArticlesToTopic(repo);
-      const savedArticles = await service.findAllArticlesInTopic(topic, 1, 2);
+      const savedArticles = await service.findAllArticlesInTopic(
+        topic,
+        1,
+        2,
+        false,
+      );
       expect(savedArticles).toEqual(articles.slice(0, 2));
     });
   });
