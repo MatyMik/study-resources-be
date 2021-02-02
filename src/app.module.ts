@@ -12,6 +12,8 @@ import { Youtube } from './youtube/youtube.entity';
 import { Article } from './article/article.entity';
 import { User } from './authentication/user.entity';
 import { Topic } from './topics/topic.entity';
+import { CourseController } from './course/course.controller';
+import { CourseModule } from './course/course.module';
 
 @Module({
   imports: [
@@ -33,6 +35,7 @@ import { Topic } from './topics/topic.entity';
     TopicsModule,
     ArticleModule,
     YoutubeModule,
+    CourseModule,
   ],
 })
 export class AppModule {}

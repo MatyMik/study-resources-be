@@ -4,7 +4,7 @@ import { AuthenticationService } from './authentication.service';
 import { TypeOrmModule, getRepositoryToken } from '@nestjs/typeorm';
 import { Article } from '../article/article.entity';
 import { Topic } from '../topics/topic.entity';
-import { User } from '../authentication/user.entity';
+import { User } from './user.entity';
 import { Pdf } from '../pdf/pdf.entity';
 import { Youtube } from '../youtube/youtube.entity';
 import { ConfigModule } from '@nestjs/config';

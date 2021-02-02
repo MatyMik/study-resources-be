@@ -10,6 +10,9 @@ import {
   lastPageRead,
   youtubeTitle,
   pdfTitle,
+  courseTitle,
+  sectionTitle,
+  videoTitle,
 } from './test-data';
 
 const hashPassword = async (password: string) => {
@@ -173,4 +176,122 @@ export const saveMultiplePdfsToTopic = async (repo) => {
     ORDER BY "lastActive" DESC;`);
 
   return [savedTopic, savedPdfs];
+};
+
+export const saveOneCourseToTopic = async (repo) => {
+  const savedTopic = await createOneTopic(repo);
+
+  await repo.query(
+    `INSERT INTO public.course(title, "topicId") 
+    VALUES('${courseTitle}', ${savedTopic.id});`,
+  );
+
+  const [
+    savedCourse,
+  ] = await repo.query(`SELECT id, title, "topicId", archived FROM public.course 
+    WHERE "title" = '${courseTitle}' AND "topicId" = ${savedTopic.id};`);
+
+  return [savedTopic, savedCourse];
+};
+
+export const saveOneCourseSectionVideoToTopic = async (repo) => {
+  const savedTopic = await createOneTopic(repo);
+
+  await repo.query(
+    `INSERT INTO public.course(title, "topicId") 
+    VALUES('${courseTitle}', ${savedTopic.id});`,
+  );
+
+  const [
+    savedCourse,
+  ] = await repo.query(`SELECT id, title, "topicId", archived FROM public.course 
+    WHERE "title" = '${courseTitle}' AND "topicId" = ${savedTopic.id};`);
+  // console.log(savedCourse);
+
+  await repo.query(
+    `INSERT INTO public.section(title, "courseId", "order") 
+    VALUES('${sectionTitle}', ${savedCourse.id}, 1);`,
+  );
+
+  const [
+    savedSection,
+  ] = await repo.query(`SELECT id, title, "courseId", "order" FROM public.section 
+  WHERE "title" = '${sectionTitle}' AND "courseId" = ${savedCourse.id};`);
+
+  await repo.query(
+    `INSERT INTO public.video(title, "sectionId", "order", url) 
+    VALUES('${videoTitle}', ${savedSection.id}, 1, '${url}');`,
+  );
+
+  const [
+    savedVideo,
+  ] = await repo.query(`SELECT id, title, "sectionId", "order" FROM public.video 
+  WHERE "title" = '${videoTitle}' AND "sectionId" = ${savedSection.id};`);
+
+  return { course: savedCourse, video: savedVideo, section: savedSection };
+};
+
+export const getSavedCourse = async (repo, courseId) => {
+  const [
+    savedCourse,
+  ] = await repo.query(`SELECT id, title, "topicId", archived FROM public.course 
+    WHERE id = '${courseId}';`);
+
+  const [
+    savedSection,
+  ] = await repo.query(`SELECT id, title, "courseId", "order" FROM public.section 
+    WHERE "title" = '${sectionTitle}' AND "courseId" = ${savedCourse.id};`);
+
+  const [
+    savedVideo,
+  ] = await repo.query(`SELECT id, title, "sectionId", "order", url FROM public.video 
+    WHERE "title" = '${videoTitle}' AND "sectionId" = ${savedSection.id};`);
+
+  return { course: savedCourse, section: savedSection, video: savedVideo };
+};
+
+export const saveMiltipleCoursesToTopic = async (repo) => {
+  const savedTopic = await createOneTopic(repo);
+
+  await repo.query(
+    `INSERT INTO public.course(title, "topicId") 
+    VALUES('${courseTitle}', ${savedTopic.id});`,
+  );
+
+  await repo.query(
+    `INSERT INTO public.course(title, "topicId") 
+    VALUES('${courseTitle}', ${savedTopic.id});`,
+  );
+  await repo.query(
+    `INSERT INTO public.course(title, "topicId") 
+    VALUES('${courseTitle}', ${savedTopic.id});`,
+  );
+  await repo.query(
+    `INSERT INTO public.course(title, "topicId") 
+    VALUES('${courseTitle}', ${savedTopic.id});`,
+  );
+  await repo.query(
+    `INSERT INTO public.course(title, "topicId") 
+    VALUES('${courseTitle}', ${savedTopic.id});`,
+  );
+  const savedCourses = await repo.query(`SELECT id, title, archived, "lastActive", "lastWatched", "totalItems" FROM public.course 
+    WHERE "topicId" = ${savedTopic.id};`);
+
+  return [savedTopic, savedCourses];
+};
+
+export const saveOneSectionToCourse = async (repo) => {
+  const [topic, course] = await saveOneCourseToTopic(repo);
+
+  await repo.query(
+    `INSERT INTO public.section(title, "courseId", "order") 
+    VALUES('${sectionTitle}', ${course.id}, 1);`,
+  );
+
+  const [
+    savedSection,
+  ] = await repo.query(`SELECT id, title, "courseId", "order" FROM public.section 
+    WHERE "title" = '${sectionTitle}' AND "courseId" = ${course.id};`);
+
+  return [course, savedSection];
 };
