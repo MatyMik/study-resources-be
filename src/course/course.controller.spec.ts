@@ -51,7 +51,7 @@ describe('CourseController', () => {
             Section,
           ],
           autoLoadEntities: true,
-          synchronize: false,
+          synchronize: true,
           keepConnectionAlive: false,
         }),
         TypeOrmModule.forFeature([Pdf, Topic, User, Video, Course, Section]),
