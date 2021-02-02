@@ -100,7 +100,7 @@ export class CourseService {
   }
   async updateLastWatched(course: Course) {
     const [{ lastWatched }] = await this.course.query(
-      `SELECT MAX("order") AS "lastWatched" FROM public.video WHERE "sectionId" IN (SELECT id FROM public.section WHERE "courseId" = ${course.id})`,
+      `SELECT MAX("order") AS "lastWatched" FROM public.video WHERE watched = true AND "sectionId" IN (SELECT id FROM public.section WHERE "courseId" = ${course.id})`,
     );
     course.lastWatched = lastWatched;
     course.lastActive = Date.now();
