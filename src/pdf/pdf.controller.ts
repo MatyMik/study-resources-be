@@ -92,6 +92,7 @@ export class PdfController {
       itemsPerPage,
       archived,
     );
-    return { resources };
+    const count = await this.pdfService.count(topicId, archived);
+    return { resources, count };
   }
 }

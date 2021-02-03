@@ -87,4 +87,11 @@ export class PdfService {
       take: limit,
     });
   }
+
+  async count(topicId: number, archived: boolean) {
+    const [{ count }] = await this.pdf.query(
+      `SELECT COUNT(id) AS count FROM public.pdf WHERE "topicId" = ${topicId} AND archived=${archived}`,
+    );
+    return count;
+  }
 }

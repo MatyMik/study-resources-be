@@ -55,4 +55,11 @@ export class YoutubeService {
       cache: true,
     });
   }
+
+  async count(topicId: number, archived: boolean) {
+    const [{ count }] = await this.youtube.query(
+      `SELECT COUNT(id) AS count FROM public.youtube WHERE "topicId" = ${topicId} AND archived=${archived}`,
+    );
+    return count;
+  }
 }
