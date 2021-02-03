@@ -123,7 +123,12 @@ describe('CourseController', () => {
     });
     it('should return all Courses', async () => {
       const [savedTopic, savedCourses] = await saveMiltipleCoursesToTopic(repo);
-      const response = await controller.findAllCourses(savedTopic.id, 1, 5);
+      const response = await controller.findAllCourses(
+        savedTopic.id,
+        1,
+        5,
+        false,
+      );
       expect(response.resources).toEqual(savedCourses);
     });
   });
@@ -136,7 +141,6 @@ describe('CourseController', () => {
     });
     it('should return a section', async () => {
       const [course, section] = await saveOneSectionToCourse(repo);
-      console.log(section.id);
       const response = await controller.findSection(section.id);
       expect(response.section.title).toEqual(section.title);
     });
