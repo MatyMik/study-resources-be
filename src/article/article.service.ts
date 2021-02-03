@@ -53,4 +53,11 @@ export class ArticleService {
       take: limit,
     });
   }
+
+  async count(topicId: number, archived: boolean) {
+    const [{ count }] = await this.article.query(
+      `SELECT COUNT(id) AS count FROM public.article WHERE "topicId" = ${topicId} AND archived=${archived}`,
+    );
+    return count;
+  }
 }

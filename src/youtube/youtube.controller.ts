@@ -36,7 +36,8 @@ export class YoutubeController {
       itemsPerPage,
       archived,
     );
-    return { resources };
+    const count = await this.youtubeService.count(topicId, archived);
+    return { resources, count };
   }
 
   @Get(':youtubeId')

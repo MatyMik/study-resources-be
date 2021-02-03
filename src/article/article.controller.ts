@@ -36,6 +36,7 @@ export class ArticleController {
       itemsPerPage,
       archived,
     );
+    const count = await this.articleService.count(topicId, archived);
     return { resources };
   }
 
