@@ -6,6 +6,7 @@ import {
   Param,
   Put,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { CreateCourseDto } from './dto/create-course-dto';
 import { TopicsService } from '../topics/topics.service';
@@ -36,11 +37,22 @@ export class CourseController {
   }
 
   @Get('all/:topicId')
-  async findAllCourses(@Param('topicId') topicId: number) {
+  async findAllCourses(
+    @Param('topicId') topicId: number,
+    @Query('page') page: number,
+    @Query('itemsPerPage') itemsPerPage: number,
+    @Query('archived') archived: boolean,
+  ) {
     const foundTopic = await this.topicService.findTopicById(topicId);
     if (!foundTopic) throw new NotFoundError('Topic was not found!');
-    const courses = await this.courseService.findAllCourses(foundTopic);
-    return { resources: courses };
+    const courses = await this.courseService.findAllCourses(
+      foundTopic,
+      page,
+      itemsPerPage,
+      archived,
+    );
+    const count = await this.courseService.countCourses(topicId, archived);
+    return { resources: courses, count };
   }
   @Get('update/lastwatched/:courseId')
   async updateLastWatched(@Param('courseId') courseId: number) {

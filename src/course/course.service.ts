@@ -50,8 +50,28 @@ export class CourseService {
     ) FROM public.course WHERE id = ${courseId}`);
     return foundCourse;
   }
-  async findAllCourses(topic: Topic): Promise<Course[]> {
-    return await this.course.find({ where: { topic } });
+  async countCourses(topicId: number, archived: boolean) {
+    const [{ count }] = await this.course.query(
+      `SELECT COUNT(id) AS count FROM public.course WHERE "topicId" = ${topicId} AND archived=${archived}`,
+    );
+    return count;
+  }
+
+  async findAllCourses(
+    topic: Topic,
+    page: number,
+    itemsPerPage: number,
+    archived: boolean,
+  ): Promise<Course[]> {
+    const limit = itemsPerPage;
+    const offset = (page - 1) * itemsPerPage;
+    return await this.course.find({
+      where: { topic, archived },
+      order: { lastActive: 'DESC' },
+      skip: offset,
+      take: limit,
+      cache: true,
+    });
   }
 
   async findSectionById(sectionId: number) {
