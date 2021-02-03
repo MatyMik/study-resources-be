@@ -107,7 +107,7 @@ describe('CourseController', () => {
   describe('return all courses', () => {
     it('should return a Course', async () => {
       const [savedTopic, savedCourses] = await saveMiltipleCoursesToTopic(repo);
-      const courses = await service.findAllCourses(savedTopic.id);
+      const courses = await service.findAllCourses(savedTopic.id, 1, 5, false);
       expect(courses).toEqual(savedCourses);
     });
   });
