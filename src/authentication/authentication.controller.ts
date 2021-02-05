@@ -60,10 +60,12 @@ export class AuthenticationController {
     );
     const tokenCookie = cookie.serialize('refreshToken', refreshToken, {
       httpOnly: true,
+      sameSite: false,
     });
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
+      sameSite: false,
     });
     res.setHeader('Set-Cookie', tokenCookie);
     return { token, userId: registeredUser.id };
@@ -97,9 +99,11 @@ export class AuthenticationController {
     );
     const tokenCookie = cookie.serialize('refreshToken', newRefreshToken, {
       httpOnly: true,
+      sameSite: false,
     });
     res.cookie('refreshToken', newRefreshToken, {
       httpOnly: true,
+      sameSite: false,
     });
     res.setHeader('Set-Cookie', tokenCookie);
     return { token, userId: userNeeded.id };
