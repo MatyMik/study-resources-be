@@ -65,26 +65,6 @@ describe('PdfController', () => {
     await repo.query('TRUNCATE TABLE public.pdf CASCADE;');
   });
 
-  describe('Upload link generation', () => {
-    it('should throw an error if user is not found', async () => {
-      const topic = await createOneTopic(repo);
-      expect(
-        controller.getSingleUploadUrl('file', topic.userId + 100),
-      ).rejects.toThrow('User not found!');
-    });
-    it('should return an upload link', async () => {
-      const topic = await createOneTopic(repo);
-      const result = await controller.getSingleUploadUrl('file', topic.userId);
-      expect(typeof result.url).toEqual('string');
-    });
-
-    it('should throw error if no query params are given', async () => {
-      await expect(controller.getSingleUploadUrl()).rejects.toThrow(
-        'No filename was provided!',
-      );
-    });
-  });
-
   describe('upload a pdf file', () => {
     it('should throw error if not all parameters are supplied', async () => {
       await expect(controller.savePdf()).rejects.toThrow('Not enough data!');

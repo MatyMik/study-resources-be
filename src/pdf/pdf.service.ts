@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { Storage, GetSignedUrlConfig } from '@google-cloud/storage';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
@@ -8,7 +7,8 @@ import { PdfDto } from './dto/create-pdf-dto';
 import { Pdf } from './pdf.entity';
 import { PdfUpdateDto } from './dto/pdf-update-dto';
 import { Topic } from '../topics/topic.entity';
-import { ActionTypes } from './dto/google-storage-action-enum';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 @Injectable()
 export class PdfService {
@@ -17,30 +17,25 @@ export class PdfService {
     @InjectRepository(Pdf) private pdf: Repository<Pdf>,
   ) {}
 
-  async getPdfLink(
-    title: string,
-    userId: number,
-    action: ActionTypes = ActionTypes.WRITE,
-  ) {
-    const bucketName = this.configService.get<string>('bucketName'); //process.env.BUCKET_NAME;
-    const projectId = this.configService.get<string>('projectId'); //process.env.PROJECT_ID; //
+  async getAWSLink(title: string, userId: number) {
+    const REGION = 'eu-central-1'; // e.g., "us-east-1"
 
-    if (!title) {
-      throw new BadRequestError('File name must be provided');
-    }
+    const bucketName = process.env.S3_BUCKET_NAME;
 
-    const storage = new Storage({ projectId });
-    const options: GetSignedUrlConfig = {
-      version: 'v4',
-      action,
-      expires: Date.now() + 15 * 60 * 1000,
-      contentType: 'application/pdf',
+    const objectParams = {
+      Bucket: bucketName,
+      Key: `${userId}/${title}`,
     };
 
-    const [url] = await storage
-      .bucket(bucketName)
-      .file(`${userId}/${title}`)
-      .getSignedUrl(options);
+    // Create an S3 client service object
+    const s3Client = new S3Client({ region: REGION });
+    const command = new PutObjectCommand(objectParams);
+
+    // Create the presigned URL.
+    const url = await getSignedUrl(s3Client, command, {
+      expiresIn: 3600,
+    });
+
     return url;
   }
 

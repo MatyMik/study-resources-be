@@ -73,27 +73,6 @@ describe('PdfService', () => {
     module.close();
   });
 
-  describe('Get one time google storage link', () => {
-    it('should be defined', async () => {
-      expect(service.getPdfLink).toBeDefined();
-    });
-
-    it('should throw error if file name is not supplied', async () => {
-      const topic = await createOneTopic(repo);
-      const title = 'pdf';
-      expect(service.getPdfLink(undefined, undefined)).rejects.toThrow(
-        'File name must be provided',
-      );
-    });
-
-    it('should return a google storage link', async () => {
-      const topic = await createOneTopic(repo);
-      const title = 'pdf';
-      const pdfDetails = await service.getPdfLink(title, topic.userId);
-      expect(pdfDetails).toBeDefined();
-    });
-  });
-
   describe('save pdf details to db', () => {
     it('should return the saved user', async () => {
       const topic = await createOneTopic(repo);
