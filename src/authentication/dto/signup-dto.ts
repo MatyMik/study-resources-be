@@ -7,16 +7,10 @@ export class SignupDto {
   @MinLength(5, {
     message: 'Password too short!',
   })
-  @MaxLength(10, {
-    message: 'Password too long!',
-  })
   password: string;
 
   @MinLength(5, {
     message: 'Password too short!',
-  })
-  @MaxLength(10, {
-    message: 'Password too long!',
   })
   confirmPassword: string;
 }
