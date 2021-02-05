@@ -1,4 +1,4 @@
-import { IsEmail, MinLength, MaxLength } from 'class-validator';
+import { IsEmail, MinLength } from 'class-validator';
 
 export class SignupDto {
   @IsEmail({}, { message: 'Invalid email format!' })
