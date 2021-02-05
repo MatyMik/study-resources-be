@@ -87,9 +87,6 @@ describe('AppController (e2e)', () => {
     expect(
       response.body.errors[1].message.includes('Password too short!'),
     ).toBe(true);
-    expect(response.body.errors[2].message.includes('Password too long!')).toBe(
-      true,
-    );
   });
 
   it('/auth/login', async () => {
