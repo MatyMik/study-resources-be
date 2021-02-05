@@ -15,7 +15,6 @@ import { PdfUpdateDto } from './dto/pdf-update-dto';
 import { NotFoundError } from '../errors/not-found-error';
 import { AuthenticationService } from '../authentication/authentication.service';
 import { TopicsService } from '../topics/topics.service';
-import { ActionTypes } from './dto/google-storage-action-enum';
 
 @Controller('book')
 export class PdfController {
@@ -34,22 +33,7 @@ export class PdfController {
     }
     const user = await this.user.findById(userId);
     if (!user) throw new NotFoundError('User not found!');
-    const url = await this.pdfService.getPdfLink(title, userId);
-    return { url };
-  }
-
-  @Get('downloadurl')
-  async getSingleDownloadUrl(
-    @Query('pdfId') pdfId: number,
-    @Query('userId') userId: number,
-  ) {
-    const pdf = await this.pdfService.findPdfById(pdfId);
-    if (!pdf) throw new NotFoundError('User not found!');
-    const url = await this.pdfService.getPdfLink(
-      pdf.title,
-      userId,
-      ActionTypes.READ,
-    );
+    const url = await this.pdfService.getAWSLink(title, userId);
     return { url };
   }
 
@@ -94,5 +78,12 @@ export class PdfController {
     );
     const count = await this.pdfService.count(topicId, archived);
     return { resources, count };
+  }
+
+  @Get(':pdfId')
+  async getSinglePdf(@Param('pdfId') pdfId: number) {
+    const pdf = await this.pdfService.findPdfById(pdfId);
+    if (!pdf) throw new NotFoundError('Pdf not found!');
+    return { pdf };
   }
 }
