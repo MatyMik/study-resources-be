@@ -1,4 +1,4 @@
-import { IsEmail, MinLength, MaxLength } from 'class-validator';
+import { IsEmail, MinLength } from 'class-validator';
 
 export class LoginDto {
   @IsEmail({}, { message: 'Invalid email format!' })
@@ -6,9 +6,6 @@ export class LoginDto {
 
   @MinLength(5, {
     message: 'Password too short!',
-  })
-  @MaxLength(10, {
-    message: 'Password too long!',
   })
   password: string;
 }
