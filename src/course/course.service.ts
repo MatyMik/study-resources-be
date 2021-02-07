@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Put } from '@nestjs/common';
 import { CreateCourseDto } from './dto/create-course-dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -7,6 +7,7 @@ import { Topic } from '../topics/topic.entity';
 import { CourseUpdateDto } from './dto/course-update-dto';
 import { SectionUpdateDto } from './dto/section-update-dto';
 import { VideoUpdateDto } from './dto/video-update-dto';
+import { SectionAddDto } from './dto/section-add-dto';
 
 @Injectable()
 export class CourseService {
@@ -40,6 +41,29 @@ export class CourseService {
     const [savedCourse] = await this.course.save<Course>([newCourse]);
     return savedCourse;
   }
+
+  async addSectionToCourse(course: Course, sections: Section[]) {
+    sections.forEach(async (section) => {
+      const newSection = Section.create();
+      newSection.title = section.title;
+      newSection.order = section.order;
+      newSection.course = course;
+      newSection.videos = [];
+      const { videos } = section;
+      videos.forEach(async (video) => {
+        const newVideo = Video.create();
+        newVideo.order = video.order;
+        newVideo.title = video.title;
+        newVideo.url = video.url;
+        newSection.videos.push(newVideo);
+      });
+      course.sections.push(newSection);
+    });
+    course.totalItems = course.totalItems;
+    const [savedCourse] = await this.course.save<Course>([course]);
+    return savedCourse;
+  }
+
   async findCourseById(courseId: number): Promise<Course> {
     const [foundCourse] = await this.course.query(`SELECT *, (
       SELECT json_agg(Row_to_json(sections)) AS sections FROM (

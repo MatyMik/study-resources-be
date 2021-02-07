@@ -14,6 +14,7 @@ import { NotFoundError } from '../errors/not-found-error';
 import { CourseService } from './course.service';
 import { CourseUpdateDto } from './dto/course-update-dto';
 import { SectionUpdateDto } from './dto/section-update-dto';
+import { Section } from './entities';
 
 @Controller('course')
 export class CourseController {
@@ -111,5 +112,17 @@ export class CourseController {
     if (!foundCourse) throw new NotFoundError('Video was not found!');
     await this.courseService.deleteCourse(courseId);
     return {};
+  }
+  @Put('/update/sections/:courseId')
+  async addSectionToCourse(
+    @Param('courseId') courseId: number,
+    @Body() courseToUpdate: CreateCourseDto,
+  ) {
+    const foundCourse = await this.courseService.findCourseById(courseId);
+    if (!foundCourse) throw new NotFoundError('Video was not found!');
+    await this.courseService.addSectionToCourse(
+      foundCourse,
+      courseToUpdate.sections,
+    );
   }
 }
