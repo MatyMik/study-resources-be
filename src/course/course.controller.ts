@@ -120,9 +120,6 @@ export class CourseController {
   ) {
     const foundCourse = await this.courseService.findCourseById(courseId);
     if (!foundCourse) throw new NotFoundError('Video was not found!');
-    await this.courseService.addSectionToCourse(
-      foundCourse,
-      courseToUpdate.sections,
-    );
+    await this.courseService.addSectionToCourse(foundCourse, courseToUpdate);
   }
 }

@@ -7,7 +7,6 @@ import { Topic } from '../topics/topic.entity';
 import { CourseUpdateDto } from './dto/course-update-dto';
 import { SectionUpdateDto } from './dto/section-update-dto';
 import { VideoUpdateDto } from './dto/video-update-dto';
-import { SectionAddDto } from './dto/section-add-dto';
 
 @Injectable()
 export class CourseService {
@@ -42,7 +41,8 @@ export class CourseService {
     return savedCourse;
   }
 
-  async addSectionToCourse(course: Course, sections: Section[]) {
+  async addSectionToCourse(course: Course, courseUpdateData: CreateCourseDto) {
+    const { sections } = courseUpdateData;
     sections.forEach(async (section) => {
       const newSection = Section.create();
       newSection.title = section.title;
@@ -59,7 +59,7 @@ export class CourseService {
       });
       course.sections.push(newSection);
     });
-    course.totalItems = course.totalItems;
+    course.totalItems = courseUpdateData.totalItems || course.totalItems;
     const [savedCourse] = await this.course.save<Course>([course]);
     return savedCourse;
   }
