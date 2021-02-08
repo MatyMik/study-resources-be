@@ -1,4 +1,4 @@
-import { Section } from '../interfaces/section-interface';
+import { Section } from '../entities';
 
 export class CreateCourseDto {
   topicId: number;
