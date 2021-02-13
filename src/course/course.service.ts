@@ -7,6 +7,7 @@ import { Topic } from '../topics/topic.entity';
 import { CourseUpdateDto } from './dto/course-update-dto';
 import { SectionUpdateDto } from './dto/section-update-dto';
 import { VideoUpdateDto } from './dto/video-update-dto';
+const B2 = require('backblaze-b2');
 
 @Injectable()
 export class CourseService {
@@ -149,5 +150,21 @@ export class CourseService {
     course.lastWatched = lastWatched;
     course.lastActive = Date.now();
     await this.course.save<Course>([course]);
+  }
+  async getUploadUrl() {
+    const b2 = new B2({
+      applicationKeyId: process.env.BACKBLAZE_KEY_ID,
+      applicationKey: process.env.BACKBLAZE_KEY, // or masterApplicationKey
+    });
+    await b2.authorize();
+    const buckets = await b2.listBuckets();
+    const [bucket] = buckets.data.buckets.filter(
+      (bucket) => bucket.bucketName === process.env.B2_BUCKET_NAME,
+    );
+    const response = await b2.getUploadUrl({
+      bucketId: bucket.bucketId,
+    });
+    console.log(response.data);
+    return [response.data.uploadUrl, response.data.authorizationToken];
   }
 }

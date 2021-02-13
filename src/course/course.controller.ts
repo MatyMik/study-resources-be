@@ -15,6 +15,7 @@ import { CourseService } from './course.service';
 import { CourseUpdateDto } from './dto/course-update-dto';
 import { SectionUpdateDto } from './dto/section-update-dto';
 import { Section } from './entities';
+import { BadRequestError } from 'src/errors/bad-request-error';
 
 @Controller('course')
 export class CourseController {
@@ -121,5 +122,23 @@ export class CourseController {
     const foundCourse = await this.courseService.findCourseById(courseId);
     if (!foundCourse) throw new NotFoundError('Video was not found!');
     await this.courseService.addSectionToCourse(foundCourse, courseToUpdate);
+  }
+  // @Get('uploadurl')
+  // async getUploadUrl() {
+  //   const [url, authToken] = await this.courseService.getUploadUrl();
+  //   return { url, authToken };
+  // }
+  @Post('uploadurl')
+  async getSingleUploadUrl(
+    @Body('title') title: string,
+    @Body('userId') userId: number,
+  ) {
+    if (!title) {
+      throw new BadRequestError('No filename was provided!');
+    }
+    const user = await this.user.findById(userId);
+    if (!user) throw new NotFoundError('User not found!');
+    const url = await this.pdfService.getAWSLink(title, userId);
+    return { url };
   }
 }
