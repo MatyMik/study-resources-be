@@ -6,7 +6,8 @@ import { NotAuthorizedError } from '../errors/not-authorized-error';
 export class AuthGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest();
-    if (/auth\//.test(request.url)) return true;
+    if (/auth\//.test(request.url) && request.url !== '/auth/verifytoken')
+      return true;
     const token = request.headers.authorization.split('=')[1];
     try {
       const user = verify(token, process.env.ACCESS_TOKEN_SECRET);

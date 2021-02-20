@@ -120,9 +120,7 @@ describe('CourseController', () => {
   });
   describe('return a video', () => {
     it('should return a section', async () => {
-      const { course, section, video } = await saveOneCourseSectionVideoToTopic(
-        repo,
-      );
+      const { video } = await saveOneCourseSectionVideoToTopic(repo);
       const foundVideo = await service.findVideoById(video.id);
       expect(foundVideo.title).toEqual(video.title);
     });

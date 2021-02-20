@@ -1,4 +1,4 @@
-import { Injectable, Put } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateCourseDto } from './dto/create-course-dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -7,6 +7,7 @@ import { Topic } from '../topics/topic.entity';
 import { CourseUpdateDto } from './dto/course-update-dto';
 import { SectionUpdateDto } from './dto/section-update-dto';
 import { VideoUpdateDto } from './dto/video-update-dto';
+import * as AWS from 'aws-sdk';
 
 @Injectable()
 export class CourseService {
@@ -26,6 +27,7 @@ export class CourseService {
       const newSection = Section.create();
       newSection.title = section.title;
       newSection.order = section.order;
+      newSection.totalVideoLength = section.totalVideoLength;
       newSection.videos = [];
       const { videos } = section;
       videos.forEach(async (video) => {
@@ -33,6 +35,8 @@ export class CourseService {
         newVideo.order = video.order;
         newVideo.title = video.title;
         newVideo.url = video.url;
+        newVideo.duration = video.duration;
+        newVideo.nextUrl = video.nextUrl;
         newSection.videos.push(newVideo);
       });
       newCourse.sections.push(newSection);
@@ -48,6 +52,7 @@ export class CourseService {
       newSection.title = section.title;
       newSection.order = section.order;
       newSection.course = course;
+      newSection.totalVideoLength = section.totalVideoLength;
       newSection.videos = [];
       const { videos } = section;
       videos.forEach(async (video) => {
@@ -55,6 +60,8 @@ export class CourseService {
         newVideo.order = video.order;
         newVideo.title = video.title;
         newVideo.url = video.url;
+        newVideo.duration = video.duration;
+        newVideo.nextUrl = video.nextUrl;
         newSection.videos.push(newVideo);
       });
       course.sections.push(newSection);
@@ -63,6 +70,28 @@ export class CourseService {
     const [savedCourse] = await this.course.save<Course>([course]);
     return savedCourse;
   }
+
+  createNextUrlObject = (sections) => {
+    const nextUrls = {};
+    const watchedVideos = [];
+    sections.map((section, sectionIndex) => {
+      const numberOfVideos = section.videos.length;
+      const newVideos = section.videos.map((video, videoIndex) => {
+        if (video.watched) watchedVideos.push(video.url);
+        const nextUrl =
+          numberOfVideos === videoIndex + 1
+            ? sections.length === sectionIndex + 1
+              ? null
+              : sections[sectionIndex + 1].videos[0].url
+            : section.videos[videoIndex + 1].url;
+        nextUrls[video.url] = nextUrl;
+        return { ...video, nextUrl };
+      });
+      section.videos = newVideos;
+      return section;
+    });
+    return [nextUrls, watchedVideos];
+  };
 
   async findCourseById(courseId: number): Promise<Course> {
     const [foundCourse] = await this.course.query(`SELECT *, (
@@ -73,6 +102,12 @@ export class CourseService {
       ) AS sections
     ) FROM public.course WHERE id = ${courseId}`);
     return foundCourse;
+  }
+  createUrlList(course) {
+    const [nextUrls, watchedVideos] = this.createNextUrlObject(course.sections);
+    course.nextUrls = nextUrls;
+    course.watchedVideos = watchedVideos;
+    return course;
   }
   async countCourses(topicId: number, archived: boolean) {
     const [{ count }] = await this.course.query(
@@ -94,7 +129,7 @@ export class CourseService {
       order: { lastActive: 'DESC' },
       skip: offset,
       take: limit,
-      cache: true,
+      cache: false,
     });
   }
 
@@ -131,7 +166,7 @@ export class CourseService {
     currentVideo.title = newVideoFields.title || currentVideo.title;
     currentVideo.order = newVideoFields.order || currentVideo.order;
     currentVideo.duration = newVideoFields.duration || currentVideo.duration;
-    currentVideo.watched = newVideoFields.watched || currentVideo.watched;
+    currentVideo.watched = newVideoFields.watched;
     currentVideo.minutesWatched =
       newVideoFields.minutesWatched || currentVideo.minutesWatched;
     const [updatedVideo] = await this.video.save<Video>([currentVideo]);
@@ -149,5 +184,25 @@ export class CourseService {
     course.lastWatched = lastWatched;
     course.lastActive = Date.now();
     await this.course.save<Course>([course]);
+  }
+
+  async getAWSLink(url: string, userId: number) {
+    const ep = new AWS.Endpoint('fra1.digitaloceanspaces.com');
+    const s3 = new AWS.S3({
+      endpoint: ep,
+      accessKeyId: process.env.DO_ACCESS_KEY,
+      secretAccessKey: process.env.DO_SECRET,
+      region: 'fra1',
+      signatureVersion: 'v4',
+    });
+    const s3Params = {
+      Bucket: 'study-resources-test',
+      Key: `${userId}/${url}`,
+      ContentType: 'video/mp4',
+      ACL: 'public-read',
+      Expires: 3600,
+    };
+    const uploadUrl = await s3.getSignedUrl('putObject', s3Params);
+    return uploadUrl;
   }
 }

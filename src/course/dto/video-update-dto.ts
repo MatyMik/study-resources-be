@@ -1,7 +1,7 @@
 export class VideoUpdateDto {
   title?: string;
   order?: number;
-  duration?: number;
+  duration?: string;
   watched?: boolean;
   minutesWatched?: number;
 }
