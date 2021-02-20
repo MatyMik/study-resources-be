@@ -10,13 +10,7 @@ import { User } from '../authentication/user.entity';
 import { AuthenticationService } from '../authentication/authentication.service';
 import * as cookieParser from 'cookie-parser';
 import { AuthGuard } from '../middlewares/tokens';
-import { Topic } from '../topics/topic.entity';
-import { TypeOrmModule, getRepositoryToken } from '@nestjs/typeorm';
-import { ConfigModule } from '@nestjs/config';
-import configuration from '../config/config';
-import { Youtube } from '../youtube/youtube.entity';
-import { Article } from '../article/article.entity';
-import { Pdf } from '../pdf/pdf.entity';
+import { getRepositoryToken } from '@nestjs/typeorm';
 
 const password = '21Passrd';
 const email = 'test@test.com';
@@ -31,23 +25,7 @@ describe('AppController (e2e)', () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [
-        AppModule,
-        // ConfigModule.forRoot({ load: [configuration] }),
-        // TypeOrmModule.forRoot({
-        //   type: 'postgres',
-        //   host: process.env.POSTGRES_HOST,
-        //   port: parseInt(process.env.POSTGRES_PORT),
-        //   username: process.env.POSTGRES_USER,
-        //   password: process.env.POSTGRES_PASSWORD,
-        //   database: process.env.POSTGRES_DB,
-        //   entities: [User, Topic, Youtube, Article, Pdf],
-        //   autoLoadEntities: true,
-        //   synchronize: true,
-        //   keepConnectionAlive: true,
-        // }),
-        // TypeOrmModule.forFeature([User, Topic]),
-      ],
+      imports: [AppModule],
     }).compile();
 
     app = module.createNestApplication();
@@ -107,29 +85,5 @@ describe('AppController (e2e)', () => {
       .post('/auth/login')
       .send({ email, password });
     expect(response.header).toBeTruthy();
-  });
-
-  it('should return an auth token and refresh token after login', async () => {
-    const signupData = { email, password, confirmPassword: password };
-    await controller.signup(signupData);
-    const response = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({ email, password });
-    expect(response.body.token).toBeTruthy();
-    expect(response.header['set-cookie']).toBeTruthy();
-  });
-
-  it('should return a new auth token and refresh token after valid refresh token supplied', async () => {
-    const refreshToken = await service.createJwtToken(
-      { email },
-      process.env.REFRESH_TOKEN_SECRET,
-      '5d',
-    );
-    const newResponse = await request(app.getHttpServer())
-      .get('/auth/refreshtoken')
-      .set('Cookie', [`refreshToken=${refreshToken}`]);
-    expect(refreshToken).not.toBe(
-      newResponse.header['set-cookie'][0].split('=')[0],
-    );
   });
 });

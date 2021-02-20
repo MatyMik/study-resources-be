@@ -10,17 +10,19 @@ import {
 } from '@nestjs/common';
 import { CreateCourseDto } from './dto/create-course-dto';
 import { TopicsService } from '../topics/topics.service';
+import { AuthenticationService } from '../authentication/authentication.service';
 import { NotFoundError } from '../errors/not-found-error';
 import { CourseService } from './course.service';
 import { CourseUpdateDto } from './dto/course-update-dto';
 import { SectionUpdateDto } from './dto/section-update-dto';
-import { Section } from './entities';
+import { BadRequestError } from '../errors/bad-request-error';
 
 @Controller('course')
 export class CourseController {
   constructor(
     private topicService: TopicsService,
     private courseService: CourseService,
+    private user: AuthenticationService,
   ) {}
   @Post('add/course')
   async saveCourse(@Body() courseData: CreateCourseDto) {
@@ -34,7 +36,10 @@ export class CourseController {
   async findCourse(@Param('courseId') courseId: number) {
     const foundCourse = await this.courseService.findCourseById(courseId);
     if (!foundCourse) throw new NotFoundError('Course was not found!');
-    return { course: foundCourse };
+    if (foundCourse.sections && foundCourse.sections.length > 0) {
+      const course = this.courseService.createUrlList(foundCourse);
+      return { course };
+    } else return { course: foundCourse };
   }
 
   @Get('all/:topicId')
@@ -121,5 +126,27 @@ export class CourseController {
     const foundCourse = await this.courseService.findCourseById(courseId);
     if (!foundCourse) throw new NotFoundError('Video was not found!');
     await this.courseService.addSectionToCourse(foundCourse, courseToUpdate);
+  }
+
+  @Post('uploadurl')
+  async getSingleUploadUrl(
+    @Body('urls') urls: string[],
+    @Body('userId') userId: number,
+  ) {
+    if (!urls.length) {
+      throw new BadRequestError('No filename was provided!');
+    }
+    const user = await this.user.findById(userId);
+    if (!user) throw new NotFoundError('User not found!');
+    const uploadUrls = {};
+    const urlGenerator = urls.map(async (url) => {
+      const uploadUrl = await this.courseService.getAWSLink(url, userId);
+      return { title: url, url: uploadUrl };
+    });
+    for await (const url of urlGenerator) {
+      uploadUrls[url.title] = url.url;
+    }
+
+    return { urls: uploadUrls };
   }
 }

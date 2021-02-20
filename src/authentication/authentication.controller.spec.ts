@@ -159,34 +159,4 @@ describe('AuthenticationController', () => {
       expect(response.token).toBeTruthy();
     });
   });
-
-  describe('refresh token route', () => {
-    it('should throw error if invalid refresh token is sent', async () => {
-      await controller.signup({
-        email: testEmail,
-        password,
-        confirmPassword: password,
-      });
-
-      const response = await controller.login(
-        {
-          email: testEmail,
-          password: password,
-        },
-        {
-          setHeader: (headerName, header, headerOptions) =>
-            header + String(headerOptions),
-          send: (data) => data,
-          cookie: (data) => data,
-        },
-      );
-      const { token } = response;
-      const modifiedRefreshToken = token + 'a';
-      await expect(
-        controller.refreshToken({
-          cookies: { refreshToken: modifiedRefreshToken },
-        }),
-      ).rejects.toThrow('Invalid refresh token!');
-    });
-  });
 });

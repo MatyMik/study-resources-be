@@ -9,6 +9,7 @@ import { NotFoundError } from '../errors/not-found-error';
 import { NotAuthorizedError } from '../errors/not-authorized-error';
 import { Response } from 'express';
 import * as cookie from 'cookie';
+import { User } from '../decorators/user';
 
 @Controller('auth')
 export class AuthenticationController {
@@ -51,65 +52,17 @@ export class AuthenticationController {
     const token = await this.authenticationService.createJwtToken(
       { email },
       process.env.ACCESS_TOKEN_SECRET,
-      '15m',
+      '2d',
     );
-    const refreshToken = await this.authenticationService.createJwtToken(
-      { email },
-      process.env.REFRESH_TOKEN_SECRET,
-      '5d',
-    );
-    const tokenCookie = cookie.serialize('refreshToken', refreshToken, {
-      httpOnly: true,
-      sameSite: 'none',
-      secure: true,
-    });
-
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      sameSite: 'none',
-      secure: true,
-    });
-    res.setHeader('Set-Cookie', tokenCookie);
     return { token, userId: registeredUser.id };
   }
 
-  @Get('refreshtoken')
-  async refreshToken(
-    @Cookies('refreshToken') refreshToken: string,
-    @Res({ passthrough: true }) res: Response,
-  ) {
-    const user = this.authenticationService.verifyJwtToken(
-      refreshToken,
-      process.env.REFRESH_TOKEN_SECRET,
+  @Post('verifytoken')
+  async verifyToken(@User('user') user: any) {
+    const foundUser = await this.authenticationService.findUserByEmail(
+      user.email,
     );
-    if (!user) throw new NotAuthorizedError('Invalid refresh token!');
-
-    const userNeeded = await this.authenticationService.findUserByEmail(
-      user['email'],
-    );
-    const userData = { email: user['email'] };
-
-    const token = await this.authenticationService.createJwtToken(
-      userData,
-      process.env.ACCESS_TOKEN_SECRET,
-      '15m',
-    );
-    const newRefreshToken = await this.authenticationService.createJwtToken(
-      userData,
-      process.env.REFRESH_TOKEN_SECRET,
-      '5d',
-    );
-    const tokenCookie = cookie.serialize('refreshToken', newRefreshToken, {
-      httpOnly: true,
-      sameSite: 'none',
-      secure: true,
-    });
-    res.cookie('refreshToken', newRefreshToken, {
-      httpOnly: true,
-      sameSite: 'none',
-      secure: true,
-    });
-    res.setHeader('Set-Cookie', tokenCookie);
-    return { token, userId: userNeeded.id };
+    if (!foundUser) throw new NotFoundError('Email not registered!');
+    return { userId: foundUser.id };
   }
 }
