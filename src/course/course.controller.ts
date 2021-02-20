@@ -10,18 +10,19 @@ import {
 } from '@nestjs/common';
 import { CreateCourseDto } from './dto/create-course-dto';
 import { TopicsService } from '../topics/topics.service';
+import { AuthenticationService } from '../authentication/authentication.service';
 import { NotFoundError } from '../errors/not-found-error';
 import { CourseService } from './course.service';
 import { CourseUpdateDto } from './dto/course-update-dto';
 import { SectionUpdateDto } from './dto/section-update-dto';
-import { Section } from './entities';
-import { BadRequestError } from 'src/errors/bad-request-error';
+import { BadRequestError } from '../errors/bad-request-error';
 
 @Controller('course')
 export class CourseController {
   constructor(
     private topicService: TopicsService,
     private courseService: CourseService,
+    private user: AuthenticationService,
   ) {}
   @Post('add/course')
   async saveCourse(@Body() courseData: CreateCourseDto) {
@@ -123,22 +124,26 @@ export class CourseController {
     if (!foundCourse) throw new NotFoundError('Video was not found!');
     await this.courseService.addSectionToCourse(foundCourse, courseToUpdate);
   }
-  // @Get('uploadurl')
-  // async getUploadUrl() {
-  //   const [url, authToken] = await this.courseService.getUploadUrl();
-  //   return { url, authToken };
-  // }
+
   @Post('uploadurl')
   async getSingleUploadUrl(
-    @Body('title') title: string,
+    @Body('urls') urls: string[],
     @Body('userId') userId: number,
   ) {
-    if (!title) {
+    if (!urls.length) {
       throw new BadRequestError('No filename was provided!');
     }
     const user = await this.user.findById(userId);
     if (!user) throw new NotFoundError('User not found!');
-    const url = await this.pdfService.getAWSLink(title, userId);
-    return { url };
+    const uploadUrls = {};
+    const urlGenerator = urls.map(async (url) => {
+      const uploadUrl = await this.courseService.getAWSLink(url, userId);
+      return { title: url, url: uploadUrl };
+    });
+    for await (const url of urlGenerator) {
+      uploadUrls[url.title] = url.url;
+    }
+
+    return { urls: uploadUrls };
   }
 }

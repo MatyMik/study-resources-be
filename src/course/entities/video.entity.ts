@@ -18,6 +18,9 @@ export class Video extends BaseEntity {
   @Column({ nullable: false })
   url: string;
 
+  @Column({ nullable: true })
+  nextUrl: string;
+
   @ManyToOne(() => Section, (section) => section.videos)
   section: Section;
 
@@ -25,7 +28,7 @@ export class Video extends BaseEntity {
   order: number;
 
   @Column({ nullable: true })
-  duration: number;
+  duration: string;
 
   @Column({ default: false })
   watched: boolean;

@@ -23,6 +23,9 @@ export class Section extends BaseEntity {
   @Column({ nullable: false })
   order: number;
 
+  @Column({ nullable: true })
+  totalVideoLength: string;
+
   @OneToMany(() => Video, (video) => video.section, {
     cascade: ['insert', 'update'], // <= here
     onDelete: 'CASCADE',
