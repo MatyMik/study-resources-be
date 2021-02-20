@@ -36,7 +36,8 @@ export class CourseController {
   async findCourse(@Param('courseId') courseId: number) {
     const foundCourse = await this.courseService.findCourseById(courseId);
     if (!foundCourse) throw new NotFoundError('Course was not found!');
-    return { course: foundCourse };
+    const course = this.courseService.createUrlList(foundCourse);
+    return { course };
   }
 
   @Get('all/:topicId')

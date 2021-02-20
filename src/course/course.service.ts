@@ -101,12 +101,13 @@ export class CourseService {
         ) FROM public.section AS section WHERE section."courseId"=public.course.id ORDER BY section."order"
       ) AS sections
     ) FROM public.course WHERE id = ${courseId}`);
-    const [nextUrls, watchedVideos] = this.createNextUrlObject(
-      foundCourse.sections,
-    );
-    foundCourse.nextUrls = nextUrls;
-    foundCourse.watchedVideos = watchedVideos;
     return foundCourse;
+  }
+  createUrlList(course) {
+    const [nextUrls, watchedVideos] = this.createNextUrlObject(course.sections);
+    course.nextUrls = nextUrls;
+    course.watchedVideos = watchedVideos;
+    return course;
   }
   async countCourses(topicId: number, archived: boolean) {
     const [{ count }] = await this.course.query(
