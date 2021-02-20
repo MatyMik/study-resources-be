@@ -170,7 +170,6 @@ export class CourseService {
     currentVideo.minutesWatched =
       newVideoFields.minutesWatched || currentVideo.minutesWatched;
     const [updatedVideo] = await this.video.save<Video>([currentVideo]);
-    console.log(updatedVideo);
     return updatedVideo;
   }
 
