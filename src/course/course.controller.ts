@@ -16,6 +16,7 @@ import { CourseService } from './course.service';
 import { CourseUpdateDto } from './dto/course-update-dto';
 import { SectionUpdateDto } from './dto/section-update-dto';
 import { BadRequestError } from '../errors/bad-request-error';
+import { VideoWatchedUpdateDto } from './dto/video-watched-update.dto';
 
 @Controller('course')
 export class CourseController {
@@ -106,6 +107,15 @@ export class CourseController {
     @Body() newVideoData: SectionUpdateDto,
   ) {
     const foundVideo = await this.courseService.findVideoById(videoId);
+    if (!foundVideo) throw new NotFoundError('Video was not found!');
+    await this.courseService.updateVideo(newVideoData, foundVideo);
+    return { video: foundVideo };
+  }
+
+  @Put('update/videobyurl')
+  async updateVideoByUrl(@Body() newVideoData: VideoWatchedUpdateDto) {
+    const { url } = newVideoData;
+    const foundVideo = await this.courseService.findVideoByUrl(url);
     if (!foundVideo) throw new NotFoundError('Video was not found!');
     await this.courseService.updateVideo(newVideoData, foundVideo);
     return { video: foundVideo };

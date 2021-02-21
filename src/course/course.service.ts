@@ -142,6 +142,10 @@ export class CourseService {
     const [video] = await this.video.find({ id: videoId });
     return video;
   }
+  async findVideoByUrl(url: string) {
+    const [video] = await this.video.find({ where: { url } });
+    return video;
+  }
 
   async updateCourse(newCourseFields: CourseUpdateDto, currentCourse: Course) {
     currentCourse.title = newCourseFields.title || currentCourse.title;
