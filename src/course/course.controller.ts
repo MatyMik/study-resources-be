@@ -81,6 +81,16 @@ export class CourseController {
     if (!video) throw new NotFoundError('Video was not found!');
     return { video };
   }
+
+  @Put('update/video/videobyurl')
+  async updateVideoByUrl(@Body() newVideoData: VideoWatchedUpdateDto) {
+    const { url } = newVideoData;
+    const foundVideo = await this.courseService.findVideoByUrl(url);
+    if (!foundVideo) throw new NotFoundError('Video was not found!');
+    await this.courseService.updateVideo(newVideoData, foundVideo);
+    return { video: foundVideo };
+  }
+
   @Put('update/:courseId')
   async updateCourse(
     @Param('courseId') courseId: number,
@@ -107,15 +117,6 @@ export class CourseController {
     @Body() newVideoData: SectionUpdateDto,
   ) {
     const foundVideo = await this.courseService.findVideoById(videoId);
-    if (!foundVideo) throw new NotFoundError('Video was not found!');
-    await this.courseService.updateVideo(newVideoData, foundVideo);
-    return { video: foundVideo };
-  }
-
-  @Put('update/videobyurl')
-  async updateVideoByUrl(@Body() newVideoData: VideoWatchedUpdateDto) {
-    const { url } = newVideoData;
-    const foundVideo = await this.courseService.findVideoByUrl(url);
     if (!foundVideo) throw new NotFoundError('Video was not found!');
     await this.courseService.updateVideo(newVideoData, foundVideo);
     return { video: foundVideo };
