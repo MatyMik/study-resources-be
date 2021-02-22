@@ -200,7 +200,7 @@ export class CourseService {
       signatureVersion: 'v4',
     });
     const s3Params = {
-      Bucket: 'study-resources-test',
+      Bucket: process.env.DO_BUCKET,
       Key: `${userId}/${url}`,
       ContentType: 'video/mp4',
       ACL: 'public-read',
