@@ -204,7 +204,7 @@ export class CourseService {
       Key: `${userId}/${url}`,
       ContentType: 'video/mp4',
       ACL: 'public-read',
-      Expires: 3600,
+      Expires: 7200,
     };
     const uploadUrl = await s3.getSignedUrl('putObject', s3Params);
     return uploadUrl;
